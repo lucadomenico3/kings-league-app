@@ -67,7 +67,7 @@ if menu == "🏆 Classifica":
             if c in df.columns:
                 df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0).astype(int)
         
-        # Ordinamento Ufficiale (Regolamento Art. 3)
+        # Ordinamento Ufficiale (Regolamento Art. [cite_start]3) [cite: 73-80]
         # 1. Punti
         # 2. Differenza Reti
         # 3. Gol Fatti
@@ -146,7 +146,7 @@ elif menu == "📜 Regolamento":
     st.header("📜 Regolamento Ufficiale")
     st.markdown("Tutte le regole per seguire al meglio la Kings Valdagri Cup.")
     
-    # SEZIONE 1: PUNTEGGI
+    # [cite_start]SEZIONE 1: PUNTEGGI [cite: 58-62]
     with st.expander("🏆 1. Punteggi e Classifica", expanded=True):
         st.markdown("""
         La partita non può finire in pareggio.
@@ -155,7 +155,7 @@ elif menu == "📜 Regolamento":
         * **1 Punto:** Sconfitta agli Shoot-out.
         * **0 Punti:** Sconfitta nei tempi regolamentari.
         
-        **In caso di arrivo a pari punti, l'ordine è deciso da:**
+        [cite_start]**In caso di arrivo a pari punti, l'ordine è deciso da:** [cite: 73-80]
         1.  Miglior Differenza Reti (DR).
         2.  Maggior numero di Gol Fatti (GF).
         3.  Minor numero di Gol Subiti (GS).
@@ -164,7 +164,7 @@ elif menu == "📜 Regolamento":
         6.  Lancio della monetina.
         """)
 
-    # SEZIONE 2: SVOLGIMENTO
+    # [cite_start]SEZIONE 2: SVOLGIMENTO [cite: 83-121]
     with st.expander("⏱️ 2. Fasi della Partita (40 Minuti)"):
         st.markdown("""
         **PRIMO TEMPO (20')**
@@ -181,7 +181,7 @@ elif menu == "📜 Regolamento":
         * **Min 36-38:** ⚽ **GOL DOPPIO** (Finale di gara).
         """)
 
-    # SEZIONE 3: CARTE
+    # [cite_start]SEZIONE 3: CARTE [cite: 27-38]
     with st.expander("🃏 3. Carte Segrete & Bonus"):
         st.markdown("""
         *Le carte possono essere giocate dal 5' al 17' e dal 23' al 36'.*
@@ -195,17 +195,19 @@ elif menu == "📜 Regolamento":
         * 👔 **Rigore Presidenziale:** Chiamabile solo se presente il Presidente.
         """)
 
-    # SEZIONE 4: SANZIONI
+    # [cite_start]SEZIONE 4: SANZIONI [cite: 139-151]
     with st.expander("⚖️ 4. Cartellini e Sanzioni"):
         st.markdown("""
         * 🟨 **Cartellino Giallo:** Fuori per **2 minuti**. Se la squadra subisce gol, il giocatore rientra.
         * 🟥 **Cartellino Rosso:** Espulsione definitiva. Squadra in inferiorità per **4 minuti** fissi (anche se subisce gol).
         """)
 
-    # SEZIONE 5: SHOOT-OUT
+    # [cite_start]SEZIONE 5: SHOOT-OUT [cite: 132-138]
     with st.expander("🥅 5. Regole Shoot-out"):
         st.markdown("""
         * Partenza da centrocampo palla al piede.
         * Tempo massimo: **5 secondi** dal primo tocco.
         * Il portiere non può uscire dall'area durante l'azione.
-        * Se il portiere tocca la
+        * Se il portiere tocca la palla e questa non entra, l'azione è finita.
+        * Gol valido solo se la palla entra prima dello scadere del tempo.
+        """)
