@@ -14,7 +14,7 @@ def carica_dati(nome_foglio):
         sheet_id = "1AlDJPezf9n86qapVEzrpn7PEdehmOrnQbKJH2fYE3uY"
         url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={nome_foglio}"
         df = pd.read_csv(url)
-        df.columns = df.columns.str.strip()
+        df.columns = df.columns.str.strip() # Rimuove spazi invisibili dai nomi delle colonne
         return df
     except:
         return None
@@ -34,37 +34,38 @@ if st.sidebar.button("🔄 Aggiorna Dati"):
 
 menu = st.sidebar.radio("Navigazione", ["📊 Classifica", "⚽ Marcatori", "📅 Calendario", "🎲 Il Dado", "🃏 Carte Segrete"])
 
-# --- CRONACA ---
+# --- SEZIONE CRONACA ---
 df_cronaca = carica_dati("Cronaca")
 if df_cronaca is not None and not df_cronaca.empty:
     ultimo = df_cronaca.iloc[-1]
     st.info(f"🔴 **LIVE {ultimo['Ora']}:** {ultimo['Evento']}")
 
-# --- 1. CLASSIFICA (Ordinamento: Punti > DR > GF) ---
+# --- 1. CLASSIFICA ---
 if menu == "📊 Classifica":
     st.header("Classifica Generale")
     df = carica_dati("Classifica")
     if df is not None:
-        # Pulizia e conversione numerica
-        colonne_da_pulire = ['Punti', 'Vinte', 'GF', 'GS', 'DR']
-        for col in colonne_da_pulire:
+        # Convertiamo i dati in numeri per l'ordinamento corretto
+        colonne_num = ['Punti', 'Vinte', 'GF', 'GS', 'DR']
+        for col in colonne_num:
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
         
-        # Logica di spareggio professionale
+        # Ordinamento: Punti > DR > GF
         df_ordinata = df.sort_values(by=["Punti", "DR", "GF"], ascending=[False, False, False]).reset_index(drop=True)
         
-        # Visualizzazione con icone nelle intestazioni
+        # Configurazione colonne: 'Stemma' deve corrispondere alla colonna F del tuo foglio
         st.dataframe(
             df_ordinata.style.apply(colora_podio, axis=1),
             column_config={
-                "Logo": st.column_config.ImageColumn("🛡️", width="small"),
+                "Stemma": st.column_config.ImageColumn("🛡️", width="small"),
                 "Punti": st.column_config.NumberColumn("Pts 🏆"),
                 "GF": st.column_config.NumberColumn("⚽ F"),
                 "GS": st.column_config.NumberColumn("⚽ S"),
                 "DR": st.column_config.NumberColumn("± DR")
             },
-            use_container_width=True, hide_index=True
+            use_container_width=True, 
+            hide_index=True
         )
 
 # --- 2. MARCATORI ---
