@@ -30,7 +30,7 @@ def carica_dati(nome_foglio):
     except:
         return None
 
-# --- CSS STILE KINGS LEAGUE (DARK & GOLD) ---
+# --- CSS STILE KINGS LEAGUE (CORRETTO PER MOBILE) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;700&display=swap');
@@ -41,11 +41,13 @@ st.markdown("""
         font-family: 'Roboto', sans-serif;
     }
     
-    /* Nasconde footer e menu */
+    /* 1. NASCONDIAMO SOLO IL FOOTER E LE ICONE TABELLA */
     footer {visibility: hidden; display: none !important;}
-    header {visibility: hidden; display: none !important;}
-    #MainMenu {visibility: hidden; display: none !important;}
     [data-testid="stElementToolbar"] {display: none !important;}
+
+    /* NOTA: Ho riattivato l'Header e il MainMenu perché su mobile servono per aprire la sidebar */
+    /* header {visibility: hidden; display: none !important;}  <-- RIMOSSO PER FIX MOBILE */
+    /* #MainMenu {visibility: hidden; display: none !important;} <-- RIMOSSO PER FIX MOBILE */
 
     /* Card Stile */
     div.css-card {
@@ -119,7 +121,6 @@ if menu == "🏠 Home & Live":
     
     df_cronaca = carica_dati("Cronaca")
     if df_cronaca is not None and not df_cronaca.empty:
-        # Filtra righe vuote
         df_cronaca = df_cronaca.dropna(subset=['Evento'])
         if not df_cronaca.empty:
             ultimo = df_cronaca.iloc[-1]
@@ -132,7 +133,6 @@ if menu == "🏠 Home & Live":
 
     if match_live is not None and not match_live.empty:
         row = match_live.iloc[0]
-        # Gestione sicura dei numeri
         gc = int(float(row['Gol Casa'])) if pd.notna(row['Gol Casa']) and row['Gol Casa'] != "" else 0
         go = int(float(row['Gol Ospite'])) if pd.notna(row['Gol Ospite']) and row['Gol Ospite'] != "" else 0
         
@@ -162,9 +162,7 @@ elif menu == "🏆 Classifica":
     st.title("🏆 Classifica")
     df = carica_dati("Classifica")
     if df is not None:
-        # Rimuove righe vuote o NaN
         df = df.dropna(subset=['Squadre']) 
-        
         cols_num = ['Punti', 'PG', 'Vinte', 'GF', 'GS', 'DR', 'Gialli', 'Rossi']
         for c in cols_num:
             if c in df.columns:
@@ -188,31 +186,24 @@ elif menu == "🏆 Classifica":
             use_container_width=True, hide_index=True
         )
 
-# 3. SQUADRE (CORRETTO ERRORE NAN E DECIMALI)
+# 3. SQUADRE
 elif menu == "👕 Squadre":
     st.title("👕 Le Rose")
     df_players = carica_dati("Marcatori")
     
     if df_players is not None and 'Squadra' in df_players.columns:
-        # 1. ELIMINA LA SQUADRA "NAN" (Righe vuote)
         df_players = df_players.dropna(subset=['Squadra'])
-        # Filtra anche se la squadra è una stringa vuota
         df_players = df_players[df_players['Squadra'] != '']
-        
-        # 2. SISTEMA I DECIMALI (Forza Intero)
         if 'Gol' in df_players.columns:
              df_players['Gol'] = pd.to_numeric(df_players['Gol'], errors='coerce').fillna(0).astype(int)
 
         teams = df_players['Squadra'].unique()
-        
         cols = st.columns(2)
         for i, team in enumerate(teams):
             with cols[i % 2]:
                 with st.container(border=True):
                     st.subheader(f"🛡️ {team}")
-                    # Seleziona e formatta
                     roster = df_players[df_players['Squadra'] == team][['Giocatore', 'Gol']]
-                    # Usa st.table che ora riceve numeri interi puliti
                     st.table(roster.set_index('Giocatore'))
 
 # 4. MARCATORI
@@ -220,7 +211,7 @@ elif menu == "⚽ Marcatori":
     st.title("👟 Golden Boot")
     df_m = carica_dati("Marcatori")
     if df_m is not None:
-        df_m = df_m.dropna(subset=['Giocatore']) # Pulizia
+        df_m = df_m.dropna(subset=['Giocatore']) 
         df_m.columns = [c.capitalize() for c in df_m.columns]
         
         if 'Gol' in df_m.columns:
@@ -244,11 +235,10 @@ elif menu == "📅 Calendario":
     st.title("📅 Calendario Gare")
     df_cal = carica_dati("Calendario")
     if df_cal is not None:
-        df_cal = df_cal.dropna(subset=['Casa', 'Ospite']) # Pulizia
+        df_cal = df_cal.dropna(subset=['Casa', 'Ospite'])
         required = ['Casa', 'Ospite', 'Gol Casa', 'Gol Ospite', 'Ora', 'Stato']
         if all(c in df_cal.columns for c in required):
             for index, row in df_cal.iterrows():
-                # Gestione punteggio pulita (niente decimali)
                 gc = int(float(row['Gol Casa'])) if pd.notna(row['Gol Casa']) and row['Gol Casa'] != "" else ""
                 go = int(float(row['Gol Ospite'])) if pd.notna(row['Gol Ospite']) and row['Gol Ospite'] != "" else ""
                 
