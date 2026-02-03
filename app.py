@@ -8,12 +8,17 @@ st.set_page_config(
     page_icon="👑"
 )
 
-# --- TRUCCO PER NASCONDERE LE ICONE FASTIDIOSE (CSS) ---
+# --- CSS PER PULIZIA TOTALE (Nasconde menu, footer e toolbar) ---
 st.markdown("""
 <style>
-[data-testid="stElementToolbar"] {
-    display: none;
-}
+/* 1. Nasconde il footer "Made with Streamlit" in basso */
+footer {visibility: hidden;}
+
+/* 2. Nasconde le icone (download, zoom) sopra le tabelle */
+[data-testid="stElementToolbar"] {display: none;}
+
+/* 3. Nasconde i tre puntini del menu in alto a destra (opzionale, rende l'app più "tua") */
+#MainMenu {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
