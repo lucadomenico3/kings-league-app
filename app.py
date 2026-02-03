@@ -8,31 +8,31 @@ st.set_page_config(
     page_icon="👑"
 )
 
-# --- CSS CORRETTO PER PULIZIA ---
+# --- CSS PER PULIZIA TOTALE E DEFINITIVA ---
 st.markdown("""
 <style>
-/* 1. Nasconde il footer "Made with Streamlit" in modo aggressivo */
+/* 1. Nasconde COMPLETAMENTE il footer in basso (Hosted with Streamlit) */
 footer {
+    visibility: hidden;
     display: none !important;
-    visibility: hidden !important;
 }
 
-/* 2. Nasconde le icone (download, zoom, cerca) sopra le tabelle */
+/* 2. Nasconde l'header colorato in alto (se presente) */
+header {
+    visibility: hidden;
+    display: none !important;
+}
+
+/* 3. Nasconde il menu con i tre puntini in alto a destra */
+#MainMenu {
+    visibility: hidden;
+    display: none !important;
+}
+
+/* 4. Nasconde le icone (download, zoom, cerca) sopra le tabelle */
 [data-testid="stElementToolbar"] {
     display: none !important;
 }
-
-/* 3. Nasconde il pulsante "Deploy" se presente */
-.stDeployButton {
-    display: none !important;
-}
-
-/* 4. Nasconde la decorazione colorata in alto */
-[data-testid="stDecoration"] {
-    display: none !important;
-}
-
-/* NOTA: Abbiamo rimosso il blocco sull'header per far tornare il MENU */
 </style>
 """, unsafe_allow_html=True)
 
