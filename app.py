@@ -3,11 +3,7 @@ import pandas as pd
 import random
 
 # 1. CONFIGURAZIONE PAGINA (Con il tuo logo personalizzato)
-st.set_page_config(
-    page_title="Kings League Manager", 
-    layout="wide", 
-    page_icon="https://i.ibb.co/6R799fG/logo-kings.png"
-)
+st.set_page_config(page_title="Kings League Manager", layout="wide", page_icon="🏆")
 
 # 2. FUNZIONE CARICAMENTO DATI
 def carica_dati(nome_foglio):
