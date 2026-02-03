@@ -8,17 +8,18 @@ st.set_page_config(
     page_icon="👑"
 )
 
-# --- CSS PER PULIZIA TOTALE (Nasconde menu, footer e toolbar) ---
+# --- CSS PER PULIZIA TOTALE (Nasconde menu, footer e toolbar tabelle) ---
 st.markdown("""
 <style>
-/* 1. Nasconde il footer "Made with Streamlit" in basso */
+/* 1. Nasconde il footer "Made with Streamlit" e "Hosted with Streamlit" */
 footer {visibility: hidden;}
-
-/* 2. Nasconde le icone (download, zoom) sopra le tabelle */
-[data-testid="stElementToolbar"] {display: none;}
-
-/* 3. Nasconde i tre puntini del menu in alto a destra (opzionale, rende l'app più "tua") */
 #MainMenu {visibility: hidden;}
+header {visibility: hidden;}
+
+/* 2. Nasconde le icone (download, zoom, cerca) sopra le tabelle */
+[data-testid="stElementToolbar"] {
+    display: none;
+}
 </style>
 """, unsafe_allow_html=True)
 
