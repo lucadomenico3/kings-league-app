@@ -9,36 +9,42 @@ st.set_page_config(
     page_icon="🏆"
 )
 
-# 2. FUNZIONE SFONDO (Metodo Iniezione CSS Forzata)
-def set_bg_hack():
+# 2. FUNZIONE SFONDO (Versione "Ultra" per forzare il caricamento)
+def set_bg():
     st.markdown(
          f"""
          <style>
-         .stApp {{
+         /* Forza lo sfondo su tutti i livelli */
+         .stApp, .main, .stAppHeader {{
              background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
-                         url("https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1920");
-             background-size: cover;
-             background-position: center;
-             background-repeat: no-repeat;
-             background-attachment: fixed;
+                         url("https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1920") !important;
+             background-size: cover !important;
+             background-position: center !important;
+             background-repeat: no-repeat !important;
+             background-attachment: fixed !important;
          }}
-         /* Rende leggibili i blocchi di testo */
+         /* Rende i blocchi trasparenti (Effetto Glassmorphism) */
          [data-testid="stVerticalBlock"] > div {{
              background-color: rgba(0, 0, 0, 0.7) !important;
              padding: 20px !important;
              border-radius: 15px !important;
-             border: 1px solid rgba(255, 255, 255, 0.1);
+             border: 1px solid rgba(255, 255, 255, 0.1) !important;
          }}
-         /* Forza il colore del testo */
-         h1, h2, h3, p, span {{
+         /* Forza il colore del testo in bianco */
+         h1, h2, h3, p, span, li, label, .stMarkdown {{
              color: white !important;
+             text-shadow: 1px 1px 2px black !important;
+         }}
+         /* Sidebar scura */
+         [data-testid="stSidebar"] {{
+             background-color: rgba(20, 20, 20, 0.95) !important;
          }}
          </style>
          """,
          unsafe_allow_html=True
      )
 
-set_bg_hack()
+set_bg()
 
 # 3. FUNZIONE CARICAMENTO DATI
 def carica_dati(nome_foglio):
@@ -54,7 +60,7 @@ def carica_dati(nome_foglio):
 # 4. TITOLO E SIDEBAR
 st.title("👑 Kings League Manager")
 
-st.sidebar.title("🏆 Menu Torneo")
+st.sidebar.title("🏆 KL Tournament")
 if st.sidebar.button("🔄 Aggiorna Dati"):
     st.rerun()
 
@@ -74,7 +80,12 @@ if menu == "📊 Classifica":
             if c in df.columns:
                 df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0).astype(int)
         df_ord = df.sort_values(by=["Punti", "DR", "GF"], ascending=[False, False, False]).reset_index(drop=True)
-        st.dataframe(df_ord, column_config={"Stemma": st.column_config.ImageColumn("🛡️")}, use_container_width=True, hide_index=True)
+        st.dataframe(
+            df_ord, 
+            column_config={"Stemma": st.column_config.ImageColumn("🛡️")}, 
+            use_container_width=True, 
+            hide_index=True
+        )
 
 # --- SEZIONE 2: MARCATORI ---
 elif menu == "⚽ Marcatori":
@@ -93,11 +104,15 @@ elif menu == "📅 Calendario":
 
 # --- SEZIONE 4: DADO ---
 elif menu == "🎲 Il Dado":
+    st.header("Lancio del Dado")
     if st.button("Lancia il Dado 🎲"):
         st.balloons()
-        st.success(f"### Risultato: **{random.choice(['1vs1', '2vs2', '3vs3', '4vs4', '5vs5', '🚀 SCONTRO TOTALE'])}**")
+        esito = random.choice(['1vs1', '2vs2', '3vs3', '4vs4', '5vs5', '🚀 SCONTRO TOTALE'])
+        st.success(f"### Risultato: **{esito}**")
 
-# --- SEZIONE 5: CARTE ---
+# --- SEZIONE 5: CARTE (Corretta!) ---
 elif menu == "🃏 Carte Segrete":
+    st.header("Pesca la tua Arma")
     if st.button("Pesca una Carta 🃏"):
-        st.warning(f"### Hai pescato: **{random.choice(['🎯 RIGORE', '🧤 PORTIERE FUORI', '💰 GOL DOPPIO', '🚫 SANZIONE', '🃏 RUBACARTA'])}**")s
+        carta = random.choice(['🎯 RIGORE', '🧤 PORTIERE FUORI', '💰 GOL DOPPIO', '🚫 SANZIONE', '🃏 RUBACARTA'])
+        st.warning(f"### Hai pescato: **{carta}**")
