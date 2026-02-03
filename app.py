@@ -40,36 +40,39 @@ if df_cronaca is not None and not df_cronaca.empty:
     ultimo = df_cronaca.iloc[-1]
     st.info(f"🔴 **LIVE {ultimo['Ora']}:** {ultimo['Evento']}")
 
-# --- 1. CLASSIFICA (Spareggio: Punti -> DR -> GF) ---
+# --- 1. CLASSIFICA (Ordinamento: Punti > DR > GF) ---
 if menu == "📊 Classifica":
     st.header("Classifica Generale")
     df = carica_dati("Classifica")
     if df is not None:
-        # Trasformiamo in numeri per i calcoli
-        colonne_num = ['Punti', 'Vinte', 'GF', 'GS', 'DR']
-        for col in colonne_num:
+        # Pulizia e conversione numerica
+        colonne_da_pulire = ['Punti', 'Vinte', 'GF', 'GS', 'DR']
+        for col in colonne_da_pulire:
             if col in df.columns:
-                df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+                df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
         
-        # ORDINE: 1. Punti, 2. Differenza Reti, 3. Gol Fatti (tutti decrescenti)
+        # Logica di spareggio professionale
         df_ordinata = df.sort_values(by=["Punti", "DR", "GF"], ascending=[False, False, False]).reset_index(drop=True)
         
+        # Visualizzazione con icone nelle intestazioni
         st.dataframe(
             df_ordinata.style.apply(colora_podio, axis=1),
             column_config={
-                "Stemma": st.column_config.ImageColumn("Logo", width="small"),
-                "Punti": st.column_config.NumberColumn(format="%d 🏆"),
-                "DR": st.column_config.NumberColumn(format="%d ⚽")
+                "Logo": st.column_config.ImageColumn("🛡️", width="small"),
+                "Punti": st.column_config.NumberColumn("Pts 🏆"),
+                "GF": st.column_config.NumberColumn("⚽ F"),
+                "GS": st.column_config.NumberColumn("⚽ S"),
+                "DR": st.column_config.NumberColumn("± DR")
             },
             use_container_width=True, hide_index=True
         )
 
-# --- 2. MARCATORI (Spareggio: Gol -> Nome) ---
+# --- 2. MARCATORI ---
 elif menu == "⚽ Marcatori":
     st.header("Classifica Marcatori")
     df_m = carica_dati("Marcatori")
     if df_m is not None:
-        df_m['Gol'] = pd.to_numeric(df_m['Gol'], errors='coerce').fillna(0)
+        df_m['Gol'] = pd.to_numeric(df_m['Gol'], errors='coerce').fillna(0).astype(int)
         df_m_ordinata = df_m.sort_values(by=["Gol", "Giocatore"], ascending=[False, True]).reset_index(drop=True)
         st.table(df_m_ordinata)
 
@@ -78,7 +81,7 @@ elif menu == "📅 Calendario":
     st.header("Programma Partite")
     df_cal = carica_dati("Calendario")
     if df_cal is not None:
-        st.table(df_cal)
+        st.dataframe(df_cal, use_container_width=True, hide_index=True)
 
 # --- 4. DADO E CARTE ---
 elif menu == "🎲 Il Dado":
