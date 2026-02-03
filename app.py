@@ -2,49 +2,44 @@ import streamlit as st
 import pandas as pd
 import random
 
-# Configurazione Pagina
 st.set_page_config(page_title="Kings League Manager", layout="wide", page_icon="👑")
 
-# Funzione per caricare i dati (Classifica e Cronaca)
+# Funzione per caricare i dati dal tuo Google Sheets
 def carica_dati(nome_foglio):
     sheet_id = "1AlDJPezf9n86qapVEzrpn7PEdehmOrnQbKJH2fYE3uY"
-    # Usiamo gid=0 per il primo foglio, ma per sicurezza usiamo il nome
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={nome_foglio}"
     return pd.read_csv(url)
 
-# Funzione per colorare la classifica
+# Funzione per i colori del podio
 def colora_podio(row):
-    if row.name == 0: # Prima riga
-        return ['background-color: #FFD700; color: black; font-weight: bold'] * len(row)
-    elif row.name == 1: # Seconda riga
-        return ['background-color: #C0C0C0; color: black'] * len(row)
-    elif row.name == 2: # Terza riga
-        return ['background-color: #CD7F32; color: black'] * len(row)
+    if row.name == 0: return ['background-color: #FFD700; color: black; font-weight: bold'] * len(row)
+    if row.name == 1: return ['background-color: #C0C0C0; color: black'] * len(row)
+    if row.name == 2: return ['background-color: #CD7F32; color: black'] * len(row)
     return [''] * len(row)
 
 st.title("👑 Kings League Manager")
 
-# --- SEZIONE CRONACA (Sempre visibile in alto) ---
+# --- SEZIONE CRONACA (Sempre in alto) ---
 try:
-    df_cronaca = carica_dati("Cronaca")
-    ultimo_evento = df_cronaca.iloc[-1] # Prende l'ultima riga inserita
-    st.info(f"🔴 **LIVE {ultimo_evento['Ora']}:** {ultimo_evento['Evento']}")
+    df_cronaca = carica_dati("Cronaca") # Cerca il foglio chiamato 'Cronaca'
+    if not df_cronaca.empty:
+        ultimo_evento = df_cronaca.iloc[-1]
+        st.info(f"🔴 **LIVE {ultimo_evento['Ora']}:** {ultimo_evento['Evento']}")
 except:
-    st.write("In attesa di eventi live...")
+    st.write("In attesa di eventi live dal foglio 'Cronaca'...")
 
-# Menu
+# Menu laterale
 menu = st.sidebar.radio("Navigazione", ["📊 Classifica", "🎲 Il Dado", "🃏 Carte Segrete"])
 
 if menu == "📊 Classifica":
     st.header("Classifica Live")
     try:
-        df = carica_dati("Foglio1") # Cambia "Foglio1" se il tuo primo foglio ha un altro nome
+        # ABBIAMO AGGIORNATO IL NOME QUI SOTTO DA 'Foglio1' A 'Classifica'
+        df = carica_dati("Classifica") 
         df_ordinata = df.sort_values(by="Punti", ascending=False).reset_index(drop=True)
-        
-        # Applichiamo i colori
         st.dataframe(df_ordinata.style.apply(colora_podio, axis=1), use_container_width=True)
-    except:
-        st.error("Errore nel caricamento della classifica. Controlla i nomi dei fogli!")
+    except Exception as e:
+        st.error(f"Errore: Non trovo il foglio 'Classifica'. Controlla il nome su Google Sheets!")
 
 elif menu == "🎲 Il Dado":
     st.header("Lancio del Dado (Minuto 18)")
