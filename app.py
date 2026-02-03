@@ -2,39 +2,73 @@ import streamlit as st
 import pandas as pd
 import random
 
-# Configurazione Pagina
+# 1. Configurazione Pagina
 st.set_page_config(
     page_title="Kings League Manager", 
     layout="wide", 
     page_icon="🏆"
 )
 
+# 2. Funzione per lo Sfondo Personalizzato (Campo da calcio notturno)
+def aggiungi_sfondo():
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url("https://images.unsplash.com/photo-1508098682722-e99c43a406b2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80");
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+        }}
+        /* Overlay per migliorare la leggibilità */
+        [data-testid="stHeader"] {{
+            background-color: rgba(0,0,0,0);
+        }}
+        .stDataFrame, .stTable, .stInfo, .stSuccess, [data-testid="stVerticalBlock"] > div {{
+            background-color: rgba(0, 0, 0, 0.6) !important;
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }}
+        h1, h2, h3, p, span {{
+            color: white !important;
+            text-shadow: 2px 2px 4px #000000;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+aggiungi_sfondo()
+
+# 3. Funzione Caricamento Dati
 def carica_dati(nome_foglio):
     try:
         sheet_id = "1AlDJPezf9n86qapVEzrpn7PEdehmOrnQbKJH2fYE3uY"
         url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={nome_foglio}"
         df = pd.read_csv(url)
-        df.columns = df.columns.str.strip() # Rimuove spazi invisibili dai nomi delle colonne
+        df.columns = df.columns.str.strip()
         return df
     except:
         return None
 
 def colora_podio(row):
-    if row.name == 0: return ['background-color: #FFD700; color: black; font-weight: bold'] * len(row)
-    if row.name == 1: return ['background-color: #C0C0C0; color: black'] * len(row)
-    if row.name == 2: return ['background-color: #CD7F32; color: black'] * len(row)
+    if row.name == 0: return ['background-color: rgba(255, 215, 0, 0.7); color: white; font-weight: bold'] * len(row)
+    if row.name == 1: return ['background-color: rgba(192, 192, 192, 0.5); color: white'] * len(row)
+    if row.name == 2: return ['background-color: rgba(205, 127, 50, 0.5); color: white'] * len(row)
     return [''] * len(row)
 
 st.title("👑 Kings League Manager")
 
 # Sidebar
+st.sidebar.image("https://i.ibb.co/6R799fG/logo-kings.png", width=100)
 st.sidebar.header("Menu Torneo")
 if st.sidebar.button("🔄 Aggiorna Dati"):
     st.rerun()
 
 menu = st.sidebar.radio("Navigazione", ["📊 Classifica", "⚽ Marcatori", "📅 Calendario", "🎲 Il Dado", "🃏 Carte Segrete"])
 
-# --- SEZIONE CRONACA ---
+# --- CRONACA ---
 df_cronaca = carica_dati("Cronaca")
 if df_cronaca is not None and not df_cronaca.empty:
     ultimo = df_cronaca.iloc[-1]
@@ -45,16 +79,13 @@ if menu == "📊 Classifica":
     st.header("Classifica Generale")
     df = carica_dati("Classifica")
     if df is not None:
-        # Convertiamo i dati in numeri per l'ordinamento corretto
         colonne_num = ['Punti', 'Vinte', 'GF', 'GS', 'DR']
         for col in colonne_num:
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
         
-        # Ordinamento: Punti > DR > GF
         df_ordinata = df.sort_values(by=["Punti", "DR", "GF"], ascending=[False, False, False]).reset_index(drop=True)
         
-        # Configurazione colonne: 'Stemma' deve corrispondere alla colonna F del tuo foglio
         st.dataframe(
             df_ordinata.style.apply(colora_podio, axis=1),
             column_config={
@@ -64,8 +95,7 @@ if menu == "📊 Classifica":
                 "GS": st.column_config.NumberColumn("⚽ S"),
                 "DR": st.column_config.NumberColumn("± DR")
             },
-            use_container_width=True, 
-            hide_index=True
+            use_container_width=True, hide_index=True
         )
 
 # --- 2. MARCATORI ---
