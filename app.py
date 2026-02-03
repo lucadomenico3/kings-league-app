@@ -8,8 +8,7 @@ def carica_dati(nome_foglio):
     try:
         sheet_id = "1AlDJPezf9n86qapVEzrpn7PEdehmOrnQbKJH2fYE3uY"
         url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={nome_foglio}"
-        # Forziamo la lettura di tutte le colonne come stringhe per i link
-        return pd.read_csv(url, dtype=str)
+        return pd.read_csv(url)
     except:
         return None
 
@@ -27,51 +26,51 @@ if st.sidebar.button("🔄 Aggiorna Pagina"):
 
 menu = st.sidebar.radio("Navigazione", ["📊 Classifica", "🎲 Il Dado", "🃏 Carte Segrete", "🎥 Highlights"])
 
-# --- SEZIONE CRONACA ---
+# --- CRONACA ---
 df_cronaca = carica_dati("Cronaca")
 if df_cronaca is not None and not df_cronaca.empty:
     ultimo = df_cronaca.iloc[-1]
     st.info(f"🔴 **LIVE {ultimo['Ora']}:** {ultimo['Evento']}")
 
-# --- PAGINA CLASSIFICA ---
+# --- CLASSIFICA ---
 if menu == "📊 Classifica":
     st.header("Classifica Live")
     df = carica_dati("Classifica")
     
     if df is not None:
-        # Convertiamo i punti in numeri per l'ordinamento
+        # Pulizia: togliamo righe vuote e ordiniamo
+        df = df.dropna(subset=['Squadre']) if 'Squadre' in df.columns else df.dropna(subset=['Squadre'])
         df['Punti'] = pd.to_numeric(df['Punti'], errors='coerce').fillna(0)
         df_ordinata = df.sort_values(by="Punti", ascending=False).reset_index(drop=True)
         
-        # MOSTRA TABELLA CON LOGHI
+        # VISUALIZZAZIONE LOGHI (Usiamo 'Stemma' perché è il nome nel tuo foglio)
         st.dataframe(
             df_ordinata.style.apply(colora_podio, axis=1),
             column_config={
-                "Logo": st.column_config.ImageColumn("Stemma"), # 'Logo' deve essere uguale a cella F1
+                "Stemma": st.column_config.ImageColumn("🏆", width="small"),
                 "Punti": st.column_config.NumberColumn(format="%d 🏆")
             },
             use_container_width=True,
             hide_index=True
         )
     else:
-        st.error("Errore: Il foglio 'Classifica' non risponde. Controlla il nome del tab!")
+        st.error("Assicurati che il foglio si chiami 'Classifica' e la colonna F 'Stemma'")
 
-# (Il resto delle funzioni Dado e Carte rimane invariato...)
+# --- RESTO DELLE FUNZIONI ---
 elif menu == "🎲 Il Dado":
     st.header("Lancio del Dado")
     if st.button("Lancia il Dado 🎲"):
-        ris = random.choice(["1 vs 1", "2 vs 2", "3 vs 3", "4 vs 4", "5 vs 5", "🚀 SCONTRO TOTALE"])
         st.balloons()
-        st.success(f"### Risultato: {ris}")
+        st.success(f"Risultato: {random.choice(['1vs1', '2vs2', '3vs3', '4vs4', '5vs5', 'SCONTRO TOTALE'])}")
 
 elif menu == "🃏 Carte Segrete":
     st.header("Arma Segreta")
     if st.button("Pesca 🃏"):
-        st.warning(f"### Carta: {random.choice(['🎯 RIGORE', '🧤 PORTIERE FUORI', '💰 GOL DOPPIO', '🚫 SANZIONE'])}")
+        st.warning(f"Carta: {random.choice(['🎯 RIGORE', '🧤 PORTIERE FUORI', '💰 GOL DOPPIO', '🚫 SANZIONE'])}")
 
 elif menu == "🎥 Highlights":
     st.header("Highlights Video")
     link = st.text_input("Link Video:", "")
     if link:
         if "youtube" in link or "youtu.be" in link: st.video(link)
-        else: st.link_button("Guarda il Video 📺", link)
+        else: st.link_button("Guarda Video 📺", link)
