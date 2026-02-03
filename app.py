@@ -9,44 +9,7 @@ st.set_page_config(
     page_icon="🏆"
 )
 
-# 2. FUNZIONE SFONDO (Versione "Ultra" per forzare il caricamento)
-def set_bg():
-    st.markdown(
-         f"""
-         <style>
-         /* Forza lo sfondo su tutti i livelli */
-         .stApp, .main, .stAppHeader {{
-             background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
-                         url("https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1920") !important;
-             background-size: cover !important;
-             background-position: center !important;
-             background-repeat: no-repeat !important;
-             background-attachment: fixed !important;
-         }}
-         /* Rende i blocchi trasparenti (Effetto Glassmorphism) */
-         [data-testid="stVerticalBlock"] > div {{
-             background-color: rgba(0, 0, 0, 0.7) !important;
-             padding: 20px !important;
-             border-radius: 15px !important;
-             border: 1px solid rgba(255, 255, 255, 0.1) !important;
-         }}
-         /* Forza il colore del testo in bianco */
-         h1, h2, h3, p, span, li, label, .stMarkdown {{
-             color: white !important;
-             text-shadow: 1px 1px 2px black !important;
-         }}
-         /* Sidebar scura */
-         [data-testid="stSidebar"] {{
-             background-color: rgba(20, 20, 20, 0.95) !important;
-         }}
-         </style>
-         """,
-         unsafe_allow_html=True
-     )
-
-set_bg()
-
-# 3. FUNZIONE CARICAMENTO DATI
+# 2. FUNZIONE CARICAMENTO DATI
 def carica_dati(nome_foglio):
     try:
         sheet_id = "1AlDJPezf9n86qapVEzrpn7PEdehmOrnQbKJH2fYE3uY"
@@ -57,32 +20,48 @@ def carica_dati(nome_foglio):
     except:
         return None
 
-# 4. TITOLO E SIDEBAR
+# Funzione estetica per evidenziare il podio
+def colora_podio(row):
+    if row.name == 0: return ['background-color: #FFD700; color: black; font-weight: bold'] * len(row)
+    if row.name == 1: return ['background-color: #C0C0C0; color: black'] * len(row)
+    if row.name == 2: return ['background-color: #CD7F32; color: black'] * len(row)
+    return [''] * len(row)
+
+# 3. TITOLO E SIDEBAR
 st.title("👑 Kings League Manager")
 
-st.sidebar.title("🏆 KL Tournament")
+st.sidebar.title("🏆 Menu Torneo")
 if st.sidebar.button("🔄 Aggiorna Dati"):
     st.rerun()
 
 menu = st.sidebar.radio("Navigazione", ["📊 Classifica", "⚽ Marcatori", "📅 Calendario", "🎲 Il Dado", "🃏 Carte Segrete"])
 
-# --- LIVE TICKER ---
+# --- LIVE TICKER (Cronaca) ---
 df_cronaca = carica_dati("Cronaca")
 if df_cronaca is not None and not df_cronaca.empty:
-    st.info(f"🔴 **LIVE {df_cronaca.iloc[-1]['Ora']}:** {df_cronaca.iloc[-1]['Evento']}")
+    ultimo = df_cronaca.iloc[-1]
+    st.info(f"🔴 **LIVE {ultimo['Ora']}:** {ultimo['Evento']}")
 
 # --- SEZIONE 1: CLASSIFICA ---
 if menu == "📊 Classifica":
     st.header("Classifica Generale")
     df = carica_dati("Classifica")
     if df is not None:
+        # Pulizia numeri per ordinamento
         for c in ['Punti', 'Vinte', 'GF', 'GS', 'DR']:
             if c in df.columns:
                 df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0).astype(int)
+        
+        # Ordinamento: Punti > Differenza Reti > Gol Fatti
         df_ord = df.sort_values(by=["Punti", "DR", "GF"], ascending=[False, False, False]).reset_index(drop=True)
+        
         st.dataframe(
-            df_ord, 
-            column_config={"Stemma": st.column_config.ImageColumn("🛡️")}, 
+            df_ord.style.apply(colora_podio, axis=1),
+            column_config={
+                "Stemma": st.column_config.ImageColumn("🛡️"),
+                "Punti": st.column_config.NumberColumn("Pts"),
+                "DR": st.column_config.NumberColumn("±DR")
+            },
             use_container_width=True, 
             hide_index=True
         )
@@ -104,13 +83,13 @@ elif menu == "📅 Calendario":
 
 # --- SEZIONE 4: DADO ---
 elif menu == "🎲 Il Dado":
-    st.header("Lancio del Dado")
+    st.header("Lancio del Dado (Minuto 18)")
     if st.button("Lancia il Dado 🎲"):
         st.balloons()
         esito = random.choice(['1vs1', '2vs2', '3vs3', '4vs4', '5vs5', '🚀 SCONTRO TOTALE'])
         st.success(f"### Risultato: **{esito}**")
 
-# --- SEZIONE 5: CARTE (Corretta!) ---
+# --- SEZIONE 5: CARTE ---
 elif menu == "🃏 Carte Segrete":
     st.header("Pesca la tua Arma")
     if st.button("Pesca una Carta 🃏"):
