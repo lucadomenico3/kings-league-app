@@ -1,45 +1,28 @@
 import streamlit as st
 import pandas as pd
+import requests
+from streamlit_lottie import st_lottie
 
-# 1. CONFIGURAZIONE PAGINA
+# 1. CONFIGURAZIONE PAGINA (Deve essere la prima istruzione)
 st.set_page_config(
     page_title="Kings Valdagri Cup", 
     layout="wide", 
-    page_icon="👑"
+    page_icon="👑",
+    initial_sidebar_state="expanded"
 )
 
-# --- CSS PER PULIZIA TOTALE E DEFINITIVA ---
-st.markdown("""
-<style>
-/* 1. Nasconde COMPLETAMENTE il footer in basso (Hosted with Streamlit) */
-footer {
-    visibility: hidden;
-    display: none !important;
-}
+# --- FUNZIONI UTILI ---
 
-/* 2. Nasconde l'header colorato in alto (se presente) */
-header {
-    visibility: hidden;
-    display: none !important;
-}
+# Caricamento animazioni Lottie (Json)
+def load_lottieurl(url):
+    r = requests.get(url)
+    if r.status_code != 200:
+        return None
+    return r.json()
 
-/* 3. Nasconde il menu con i tre puntini in alto a destra */
-#MainMenu {
-    visibility: hidden;
-    display: none !important;
-}
-
-/* 4. Nasconde le icone (download, zoom, cerca) sopra le tabelle */
-[data-testid="stElementToolbar"] {
-    display: none !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# 2. FUNZIONE CARICAMENTO DATI
+# Caricamento dati Google Sheets
 def carica_dati(nome_foglio):
     try:
-        # ID del tuo foglio Google
         sheet_id = "1AlDJPezf9n86qapVEzrpn7PEdehmOrnQbKJH2fYE3uY"
         url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={nome_foglio}"
         df = pd.read_csv(url)
@@ -48,47 +31,166 @@ def carica_dati(nome_foglio):
     except:
         return None
 
-# Funzione estetica podio
-def colora_podio(row):
-    if row.name == 0: return ['background-color: #FFD700; color: black; font-weight: bold'] * len(row)
-    if row.name == 1: return ['background-color: #C0C0C0; color: black'] * len(row)
-    if row.name == 2: return ['background-color: #CD7F32; color: black'] * len(row)
-    return [''] * len(row)
+# --- STILE CSS PERSONALIZZATO (KINGS LEAGUE THEME) ---
+st.markdown("""
+<style>
+    /* Importazione Font Sportivo */
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;700&display=swap');
 
-# 3. SIDEBAR
-st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Instagram_logo_2016.svg/2048px-Instagram_logo_2016.svg.png", width=50)
-st.sidebar.markdown("### 📸 Kings Valdagri Cup")
-st.sidebar.write("Segui storie, gol e interviste!")
-st.sidebar.link_button("VAI SU INSTAGRAM ↗️", "https://www.instagram.com/kings_valdagri_cup/", type="primary")
-st.sidebar.markdown("---")
+    /* Sfondo Generale Scuro */
+    .stApp {
+        background-color: #121212;
+        color: #ffffff;
+        font-family: 'Roboto', sans-serif;
+    }
 
-st.title("👑 Kings Valdagri Cup")
-st.markdown("*Official App - Risultati e Classifiche in tempo reale*")
+    /* Nasconde elementi di sistema */
+    footer {visibility: hidden; display: none !important;}
+    header {visibility: hidden; display: none !important;}
+    #MainMenu {visibility: hidden; display: none !important;}
+    [data-testid="stElementToolbar"] {display: none !important;}
 
-if st.sidebar.button("🔄 Aggiorna Dati"):
-    st.rerun()
+    /* Stile Card Personalizzate */
+    div.css-card {
+        background-color: #1e1e1e;
+        border: 1px solid #FFD700;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        margin-bottom: 20px;
+    }
 
-menu = st.sidebar.radio("Menu", [
-    "🏆 Classifica", 
-    "👕 Squadre",
-    "⚽ Marcatori", 
-    "📅 Calendario", 
-    "📜 Regolamento"
-])
+    /* Titoli Oro */
+    h1, h2, h3 {
+        color: #FFD700 !important;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
 
-# --- LIVE TICKER ---
-df_cronaca = carica_dati("Cronaca")
-if df_cronaca is not None and not df_cronaca.empty:
-    ultimo = df_cronaca.iloc[-1]
-    st.info(f"📢 **ULTIM'ORA {ultimo['Ora']}:** {ultimo['Evento']}")
+    /* Tabelle */
+    [data-testid="stDataFrame"] {
+        border: 1px solid #333;
+        border-radius: 10px;
+        overflow: hidden;
+    }
 
-# --- SEZIONI ---
+    /* Sidebar */
+    [data-testid="stSidebar"] {
+        background-color: #000000;
+        border-right: 1px solid #333;
+    }
 
-# 1. CLASSIFICA
-if menu == "🏆 Classifica":
-    st.header("Classifica Generale")
+    /* Pulsante Aggiorna */
+    div.stButton > button {
+        background-color: #FFD700;
+        color: black;
+        font-weight: bold;
+        border-radius: 20px;
+        border: none;
+        width: 100%;
+        transition: 0.3s;
+    }
+    div.stButton > button:hover {
+        background-color: #ffea70;
+        transform: scale(1.02);
+    }
+    
+    /* Box Risultato Live */
+    .live-score {
+        font-size: 3rem; 
+        font-weight: bold; 
+        text-align: center; 
+        color: #fff;
+    }
+    .live-team {
+        font-size: 1.2rem; 
+        color: #ccc; 
+        text-align: center;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# --- CARICAMENTO ANIMAZIONI ---
+lottie_soccer = load_lottieurl("https://assets9.lottiefiles.com/packages/lf20_6YCRFI.json")
+lottie_cup = load_lottieurl("https://assets5.lottiefiles.com/packages/lf20_touohxv0.json")
+
+# --- SIDEBAR ---
+with st.sidebar:
+    st_lottie(lottie_cup, height=150, key="cup_anim")
+    st.markdown("<h2 style='text-align: center;'>KINGS VALDAGRI</h2>", unsafe_allow_html=True)
+    st.markdown("---")
+    
+    menu = st.radio("NAVIGAZIONE", [
+        "🏠 Home & Live", 
+        "🏆 Classifica", 
+        "👕 Squadre",
+        "⚽ Marcatori", 
+        "📅 Calendario", 
+        "📜 Regolamento"
+    ])
+    
+    st.markdown("---")
+    if st.button("🔄 AGGIORNA DATI"):
+        st.rerun()
+        
+    st.link_button("📸 Instagram", "https://www.instagram.com/kings_valdagri_cup/", type="primary")
+
+# --- LOGICA PAGINE ---
+
+# 1. HOME & LIVE (Nuova Dashboard Spettacolare)
+if menu == "🏠 Home & Live":
+    st.title("🏟️ Match Center")
+    
+    # Live Ticker
+    df_cronaca = carica_dati("Cronaca")
+    if df_cronaca is not None and not df_cronaca.empty:
+        ultimo = df_cronaca.iloc[-1]
+        st.warning(f"📢 **ULTIM'ORA {ultimo['Ora']}:** {ultimo['Evento']}")
+    
+    # Cerca partita LIVE
+    df_cal = carica_dati("Calendario")
+    match_live = None
+    if df_cal is not None and 'Stato' in df_cal.columns:
+        match_live = df_cal[df_cal['Stato'].str.contains("LIVE", case=False, na=False)]
+
+    if match_live is not None and not match_live.empty:
+        # VISUALIZZAZIONE PARTITA IN CORSO
+        row = match_live.iloc[0]
+        gol_casa = int(row['Gol Casa']) if pd.notna(row['Gol Casa']) else 0
+        gol_ospite = int(row['Gol Ospite']) if pd.notna(row['Gol Ospite']) else 0
+        
+        st.markdown(f"""
+        <div class="css-card">
+            <h3 style="text-align:center; color:red !important;">🔴 ORA IN CAMPO</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
+                <div style="text-align:center; width:30%;">
+                    <div class="live-team">{row['Casa']}</div>
+                </div>
+                <div style="text-align:center; width:40%;">
+                    <div class="live-score">{gol_casa} - {gol_ospite}</div>
+                    <small>{row['Ora']}</small>
+                </div>
+                <div style="text-align:center; width:30%;">
+                    <div class="live-team">{row['Ospite']}</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            st_lottie(lottie_soccer, height=200)
+        with col2:
+            st.info("Nessuna partita in corso al momento.")
+            st.markdown("Controlla il calendario per i prossimi match!")
+
+# 2. CLASSIFICA
+elif menu == "🏆 Classifica":
+    st.title("🏆 Classifica")
     df = carica_dati("Classifica")
+    
     if df is not None:
+        # Pre-processing dati
         cols_num = ['Punti', 'PG', 'Vinte', 'GF', 'GS', 'DR', 'Gialli', 'Rossi']
         for c in cols_num:
             if c in df.columns:
@@ -96,110 +198,106 @@ if menu == "🏆 Classifica":
         
         sort_by = ["Punti", "DR", "GF", "GS"]
         ascending_order = [False, False, False, True]
-        
-        if 'Gialli' in df.columns and 'Rossi' in df.columns:
-            sort_by.extend(["Gialli", "Rossi"])
-            ascending_order.extend([True, True])
+        if 'Gialli' in df.columns: sort_by.extend(["Gialli", "Rossi"]); ascending_order.extend([True, True])
 
         df_ord = df.sort_values(by=sort_by, ascending=ascending_order).reset_index(drop=True)
-        
+
+        # Visualizzazione Tabella Stilizzata
         st.dataframe(
-            df_ord.style.apply(colora_podio, axis=1),
+            df_ord,
             column_config={
-                "Stemma": st.column_config.ImageColumn("🛡️", width="small"),
-                "Punti": st.column_config.NumberColumn("PTS 🏆", format="%d"),
-                "PG": st.column_config.NumberColumn("PG", help="Partite Giocate"),
-                "DR": st.column_config.NumberColumn("Diff."),
-                "GF": st.column_config.NumberColumn("GF"),
-                "GS": st.column_config.NumberColumn("GS"),
-                "Gialli": st.column_config.NumberColumn("🟨"),
-                "Rossi": st.column_config.NumberColumn("🟥")
+                "Stemma": st.column_config.ImageColumn("Team", width="small"),
+                "Punti": st.column_config.NumberColumn("PTS", format="%d"),
+                "PG": st.column_config.NumberColumn("PG"),
+                "DR": st.column_config.NumberColumn("Diff"),
+                "Vinte": st.column_config.NumberColumn("V"),
             },
-            use_container_width=True, 
+            use_container_width=True,
             hide_index=True
         )
 
-# 2. SQUADRE
+# 3. SQUADRE
 elif menu == "👕 Squadre":
-    st.header("Le Rose del Torneo")
-    st.markdown("Clicca sulla squadra per vedere i giocatori.")
+    st.title("👕 Le Rose")
     df_players = carica_dati("Marcatori")
+    
     if df_players is not None and 'Squadra' in df_players.columns:
-        squadre_uniche = df_players['Squadra'].unique()
-        for team in squadre_uniche:
-            with st.expander(f"🛡️ {team}", expanded=False):
-                roster = df_players[df_players['Squadra'] == team][['Giocatore', 'Gol']]
-                roster = roster.sort_values(by="Giocatore")
-                st.dataframe(roster, use_container_width=True, hide_index=True, column_config={"Gol": st.column_config.NumberColumn("Gol")})
-    else:
-        st.warning("Compila il foglio 'Marcatori' per vedere le squadre.")
+        teams = df_players['Squadra'].unique()
+        
+        # Layout a griglia per le squadre
+        cols = st.columns(2)
+        for i, team in enumerate(teams):
+            with cols[i % 2]:
+                with st.container(border=True):
+                    st.subheader(f"🛡️ {team}")
+                    roster = df_players[df_players['Squadra'] == team][['Giocatore', 'Gol']]
+                    st.table(roster.set_index('Giocatore'))
 
-# 3. MARCATORI
+# 4. MARCATORI
 elif menu == "⚽ Marcatori":
-    st.header("👑 Bomber della Lega")
+    st.title("👟 Golden Boot")
     df_m = carica_dati("Marcatori")
+    
     if df_m is not None:
         df_m.columns = [c.capitalize() for c in df_m.columns]
-        if 'Gol' in df_m.columns and 'Giocatore' in df_m.columns:
+        if 'Gol' in df_m.columns:
             df_m['Gol'] = pd.to_numeric(df_m['Gol'], errors='coerce').fillna(0).astype(int)
-            max_gol = int(df_m['Gol'].max()) if not df_m.empty and df_m['Gol'].max() > 0 else 1
+            
+            # Mostra i primi 3 con stile Podio
+            top3 = df_m.sort_values(by="Gol", ascending=False).head(3)
+            
+            c1, c2, c3 = st.columns(3)
+            if len(top3) >= 1: c2.metric("🥇 Top Scorer", top3.iloc[0]['Giocatore'], f"{top3.iloc[0]['Gol']} Gol")
+            if len(top3) >= 2: c1.metric("🥈 Secondo", top3.iloc[1]['Giocatore'], f"{top3.iloc[1]['Gol']} Gol")
+            if len(top3) >= 3: c3.metric("🥉 Terzo", top3.iloc[2]['Giocatore'], f"{top3.iloc[2]['Gol']} Gol")
+            
+            st.divider()
             
             st.dataframe(
-                df_m.sort_values(by="Gol", ascending=False), 
-                use_container_width=True, hide_index=True,
+                df_m.sort_values(by="Gol", ascending=False),
+                use_container_width=True,
+                hide_index=True,
                 column_config={
-                    "Giocatore": st.column_config.TextColumn("Giocatore", width="medium"),
-                    "Squadra": st.column_config.TextColumn("Squadra", width="small"),
-                    "Gol": st.column_config.ProgressColumn("Reti", format="%d ⚽", min_value=0, max_value=max_gol)
+                    "Gol": st.column_config.ProgressColumn("Reti", format="%d", min_value=0, max_value=int(df_m['Gol'].max()))
                 }
             )
 
-# 4. CALENDARIO
+# 5. CALENDARIO
 elif menu == "📅 Calendario":
-    st.header("📅 Programma Partite")
+    st.title("📅 Calendario Gare")
     df_cal = carica_dati("Calendario")
+    
     if df_cal is not None:
         required_cols = ['Casa', 'Ospite', 'Gol Casa', 'Gol Ospite', 'Ora', 'Stato']
         if all(col in df_cal.columns for col in required_cols):
-            df_cal['Gol Casa'] = pd.to_numeric(df_cal['Gol Casa'], errors='coerce').fillna(-1).astype(int).astype(str).replace('-1', '')
-            df_cal['Gol Ospite'] = pd.to_numeric(df_cal['Gol Ospite'], errors='coerce').fillna(-1).astype(int).astype(str).replace('-1', '')
-            df_cal['Risultato'] = df_cal.apply(lambda x: f"{x['Gol Casa']} - {x['Gol Ospite']}" if x['Gol Casa'] != "" else "-", axis=1)
-            
-            st.dataframe(
-                df_cal[['Ora', 'Stato', 'Casa', 'Risultato', 'Ospite']], 
-                use_container_width=True, hide_index=True,
-                column_config={
-                    "Stato": st.column_config.SelectboxColumn("Stato", options=["In programma", "🔥 LIVE", "Terminata"], disabled=True, width="small"),
-                    "Casa": st.column_config.TextColumn("Casa", width="medium"),
-                    "Ospite": st.column_config.TextColumn("Ospite", width="medium"),
-                    "Risultato": st.column_config.TextColumn("Score", width="small"),
-                    "Ora": st.column_config.TextColumn("Orario", width="small")
-                }
-            )
-        elif 'Sfida' in df_cal.columns:
-             st.dataframe(df_cal, use_container_width=True, hide_index=True)
+            # Creazione Cards per ogni partita
+            for index, row in df_cal.iterrows():
+                score = f"{int(row['Gol Casa'])} - {int(row['Gol Ospite'])}" if row['Gol Casa'] != "" and pd.notna(row['Gol Casa']) else "vs"
+                color_border = "#FFD700" if "LIVE" in str(row['Stato']) else "#333"
+                
+                st.markdown(f"""
+                <div style="background-color: #1a1a1a; border: 1px solid {color_border}; border-radius: 10px; padding: 15px; margin-bottom: 10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:bold; color:#aaa;">{row['Ora']}</span>
+                        <span style="font-size:0.8em; background-color:#333; padding:2px 8px; border-radius:5px;">{row['Stato']}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; font-size:1.1em;">
+                        <span style="width:40%; text-align:right;">{row['Casa']}</span>
+                        <span style="width:20%; text-align:center; font-weight:bold; color:#FFD700;">{score}</span>
+                        <span style="width:40%; text-align:left;">{row['Ospite']}</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
-# 5. REGOLAMENTO
+# 6. REGOLAMENTO
 elif menu == "📜 Regolamento":
-    st.header("📜 Regolamento Ufficiale")
-    with st.expander("🏆 1. Punteggi e Classifica", expanded=True):
-        st.markdown("""
-        * **3 Punti:** Vittoria.
-        * **2 Punti:** Vittoria Shoot-out.
-        * **1 Punto:** Sconfitta Shoot-out.
-        * **0 Punti:** Sconfitta.
-        * **Spareggio:** 1. DR - 2. GF - 3. GS - 4. Disciplina.
-        """)
-    with st.expander("⏱️ 2. Fasi della Partita"):
-        st.markdown("""
-        * **Min 0-1:** 1 vs 1.
-        * **Min 18:** Dado (Min 20-23).
-        * **Min 36:** Match Ball.
-        """)
-    with st.expander("🃏 3. Carte e Sanzioni"):
-        st.markdown("""
-        * **Gol Doppio:** 4 min (x2).
-        * **Sospensione:** 3 min.
-        * **Giallo:** 2 min.
-        * **Rosso:** 4 min.
-        """)
+    st.title("📜 Le Regole del Gioco")
+    
+    tab1, tab2, tab3 = st.tabs(["🏆 Punti", "⏱️ Fasi", "🃏 Carte"])
+    
+    with tab1:
+        st.info("Vittoria: 3pt | Rigori Vinti: 2pt | Rigori Persi: 1pt | KO: 0pt")
+    with tab2:
+        st.success("Min 0-1: 1vs1 | Min 18: Dado | Min 38: Gol Doppio")
+    with tab3:
+        st.warning("Carte: Gol Doppio, Sospensione, Rigore, Jolly")
