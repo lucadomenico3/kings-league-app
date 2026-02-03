@@ -3,7 +3,7 @@ import pandas as pd
 import random
 
 # Configurazione Pagina
-st.set_page_config(page_title="Kings League Manager", layout="wide", page_icon="👑")
+st.set_page_config(page_title="Kings League Manager", layout="wide", page_icon="https://ibb.co/JR3jc5jp")
 
 def carica_dati(nome_foglio):
     try:
