@@ -34,40 +34,42 @@ if st.sidebar.button("🔄 Aggiorna Dati"):
 
 menu = st.sidebar.radio("Navigazione", ["📊 Classifica", "⚽ Marcatori", "📅 Calendario", "🎲 Il Dado", "🃏 Carte Segrete"])
 
-# --- SEZIONE CRONACA ---
+# --- CRONACA ---
 df_cronaca = carica_dati("Cronaca")
 if df_cronaca is not None and not df_cronaca.empty:
     ultimo = df_cronaca.iloc[-1]
     st.info(f"🔴 **LIVE {ultimo['Ora']}:** {ultimo['Evento']}")
 
-# --- 1. CLASSIFICA (Con gestione pareggi) ---
+# --- 1. CLASSIFICA (Spareggio: Punti -> DR -> GF) ---
 if menu == "📊 Classifica":
     st.header("Classifica Generale")
     df = carica_dati("Classifica")
     if df is not None:
-        # Convertiamo in numeri per l'ordinamento
-        df['Punti'] = pd.to_numeric(df['Punti'], errors='coerce').fillna(0)
-        df['Vinte'] = pd.to_numeric(df.get('Vinte', 0), errors='coerce').fillna(0)
+        # Trasformiamo in numeri per i calcoli
+        colonne_num = ['Punti', 'Vinte', 'GF', 'GS', 'DR']
+        for col in colonne_num:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
         
-        # ORDINE: Prima Punti (Giù), poi Vittorie (Giù) come spareggio
-        df_ordinata = df.sort_values(by=["Punti", "Vinte"], ascending=[False, False]).reset_index(drop=True)
+        # ORDINE: 1. Punti, 2. Differenza Reti, 3. Gol Fatti (tutti decrescenti)
+        df_ordinata = df.sort_values(by=["Punti", "DR", "GF"], ascending=[False, False, False]).reset_index(drop=True)
         
         st.dataframe(
             df_ordinata.style.apply(colora_podio, axis=1),
             column_config={
                 "Stemma": st.column_config.ImageColumn("Logo", width="small"),
-                "Punti": st.column_config.NumberColumn(format="%d 🏆")
+                "Punti": st.column_config.NumberColumn(format="%d 🏆"),
+                "DR": st.column_config.NumberColumn(format="%d ⚽")
             },
             use_container_width=True, hide_index=True
         )
 
-# --- 2. MARCATORI (Ordine alfabetico in caso di parità) ---
+# --- 2. MARCATORI (Spareggio: Gol -> Nome) ---
 elif menu == "⚽ Marcatori":
     st.header("Classifica Marcatori")
     df_m = carica_dati("Marcatori")
     if df_m is not None:
         df_m['Gol'] = pd.to_numeric(df_m['Gol'], errors='coerce').fillna(0)
-        # ORDINE: Prima Gol (Giù), poi Nome (Su, A-Z)
         df_m_ordinata = df_m.sort_values(by=["Gol", "Giocatore"], ascending=[False, True]).reset_index(drop=True)
         st.table(df_m_ordinata)
 
@@ -78,7 +80,7 @@ elif menu == "📅 Calendario":
     if df_cal is not None:
         st.table(df_cal)
 
-# --- 4. DADO E CARTE (Invariati) ---
+# --- 4. DADO E CARTE ---
 elif menu == "🎲 Il Dado":
     st.header("Lancio del Dado")
     if st.button("Lancia il Dado 🎲"):
