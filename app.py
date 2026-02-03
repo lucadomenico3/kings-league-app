@@ -12,7 +12,6 @@ st.set_page_config(
 # 2. FUNZIONE CARICAMENTO DATI
 def carica_dati(nome_foglio):
     try:
-        # Assicurati che l'ID del foglio sia corretto
         sheet_id = "1AlDJPezf9n86qapVEzrpn7PEdehmOrnQbKJH2fYE3uY"
         url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={nome_foglio}"
         df = pd.read_csv(url)
@@ -34,7 +33,6 @@ st.sidebar.title("🏆 Menu Torneo")
 if st.sidebar.button("🔄 Aggiorna Dati"):
     st.rerun()
 
-# Menu semplificato
 menu = st.sidebar.radio("Navigazione", ["📊 Classifica", "⚽ Marcatori", "📅 Calendario", "📜 Regolamento"])
 
 # --- LIVE TICKER ---
@@ -44,6 +42,8 @@ if df_cronaca is not None and not df_cronaca.empty:
     st.info(f"🔴 **LIVE {ultimo['Ora']}:** {ultimo['Evento']}")
 
 # --- SEZIONI ---
+
+# CLASSIFICA
 if menu == "📊 Classifica":
     st.header("Classifica Generale")
     df = carica_dati("Classifica")
@@ -54,6 +54,7 @@ if menu == "📊 Classifica":
         df_ord = df.sort_values(by=["Punti", "DR", "GF"], ascending=[False, False, False]).reset_index(drop=True)
         st.dataframe(df_ord.style.apply(colora_podio, axis=1), column_config={"Stemma": st.column_config.ImageColumn("🛡️")}, use_container_width=True, hide_index=True)
 
+# MARCATORI
 elif menu == "⚽ Marcatori":
     st.header("Classifica Marcatori")
     df_m = carica_dati("Marcatori")
@@ -61,26 +62,39 @@ elif menu == "⚽ Marcatori":
         df_m['Gol'] = pd.to_numeric(df_m['Gol'], errors='coerce').fillna(0).astype(int)
         st.dataframe(df_m.sort_values(by="Gol", ascending=False), use_container_width=True, hide_index=True)
 
+# CALENDARIO & STORICO
 elif menu == "📅 Calendario":
-    st.header("Programma Partite")
-    df_cal = carica_dati("Calendario") # Carica il foglio Calendario
+    st.header("Calendario e Risultati")
+    df_cal = carica_dati("Calendario")
     if df_cal is not None:
-        # Mostra solo le colonne del calendario (Ora, Sfida, Stato)
-        st.dataframe(df_cal, use_container_width=True, hide_index=True)
+        # Gestione colonna Risultato se presente
+        if 'Risultato' in df_cal.columns:
+            df_cal['Risultato'] = df_cal['Risultato'].fillna("-")
+        
+        st.dataframe(
+            df_cal, 
+            use_container_width=True, 
+            hide_index=True,
+            column_config={
+                "Risultato": st.column_config.TextColumn("Punteggio ⚽"),
+                "Stato": st.column_config.SelectboxColumn(
+                    "Stato",
+                    options=["In programma", "Live", "Terminata"]
+                )
+            }
+        )
     else:
-        st.warning("Aggiungi i dati nel foglio 'Calendario' su Google Sheets.")
+        st.warning("Assicurati di avere un foglio 'Calendario' con le colonne: Ora, Sfida, Risultato, Stato.")
 
+# REGOLAMENTO
 elif menu == "📜 Regolamento":
     st.header("Regolamento Ufficiale")
     st.markdown("""
-    ### 1. Formato Partite
-    Le partite durano **40 minuti** (due tempi da 20). 
+    ### 📜 Norme del Torneo
+    * **Durata**: 40 minuti totali.
+    * **Punti**: 3 per la vittoria, 0 per la sconfitta.
+    * **Spareggio**: In caso di parità punti, conta la Differenza Reti (DR), poi i Gol Fatti (GF).
     
-    ### 2. Spareggio
-    In caso di parità in classifica, i criteri sono:
-    1. Differenza Reti (DR)
-    2. Gol Fatti (GF)
-    
-    ### 3. Note Generali
-    Aggiungi qui le tue regole personalizzate.
+    ### ⚖️ Disciplina
+    * Il comportamento antisportivo comporterà sanzioni immediate.
     """)
