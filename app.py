@@ -33,8 +33,8 @@ st.sidebar.title("🏆 Menu Torneo")
 if st.sidebar.button("🔄 Aggiorna Dati"):
     st.rerun()
 
-# Aggiunta "📜 Regolamento" al menu
-menu = st.sidebar.radio("Navigazione", ["📊 Classifica", "⚽ Marcatori", "📅 Calendario", "🎲 Il Dado", "🃏 Carte Segrete", "📜 Regolamento"])
+# Menu semplificato (rimossi Dado e Carte)
+menu = st.sidebar.radio("Navigazione", ["📊 Classifica", "⚽ Marcatori", "📅 Calendario", "📜 Regolamento"])
 
 # --- LIVE TICKER ---
 df_cronaca = carica_dati("Cronaca")
@@ -66,32 +66,18 @@ elif menu == "📅 Calendario":
     if df_cal is not None:
         st.dataframe(df_cal, use_container_width=True, hide_index=True)
 
-elif menu == "🎲 Il Dado":
-    st.header("Lancio del Dado (Minuto 18)")
-    if st.button("Lancia il Dado 🎲"):
-        st.balloons()
-        st.success(f"### Risultato: **{random.choice(['1vs1', '2vs2', '3vs3', '4vs4', '5vs5', '🚀 SCONTRO TOTALE'])}**")
-
-elif menu == "🃏 Carte Segrete":
-    st.header("Arma Segreta")
-    if st.button("Pesca una Carta 🃏"):
-        st.warning(f"### Carta: **{random.choice(['🎯 RIGORE', '🧤 PORTIERE FUORI', '💰 GOL DOPPIO', '🚫 SANZIONE', '🃏 RUBACARTA'])}**")
-
 elif menu == "📜 Regolamento":
     st.header("Regolamento Ufficiale")
-    # --- INCOLLA QUI IL TUO TESTO ---
+    # Puoi incollare qui il testo completo del tuo regolamento
     st.markdown("""
     ### 1. Formato Partite
     Le partite durano **40 minuti** (due tempi da 20). 
     
-    ### 2. Il Dado (Minuto 18)
-    Al minuto 18 del primo tempo, viene lanciato il dado per decidere il numero di giocatori in campo fino alla fine del tempo.
-    
-    ### 3. Carte Segrete
-    Ogni squadra può attivare la sua carta segreta una sola volta per partita.
-    
-    ### 4. Spareggio
+    ### 2. Spareggio
     In caso di parità in classifica, i criteri sono:
     1. Differenza Reti (DR)
     2. Gol Fatti (GF)
+    
+    ### 3. Note Generali
+    Aggiungi qui eventuali altre regole specifiche del tuo torneo.
     """)
