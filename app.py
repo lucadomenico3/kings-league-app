@@ -8,7 +8,10 @@ def carica_dati(nome_foglio):
     try:
         sheet_id = "1AlDJPezf9n86qapVEzrpn7PEdehmOrnQbKJH2fYE3uY"
         url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={nome_foglio}"
-        return pd.read_csv(url)
+        # Carichiamo i dati assicurandoci che non ci siano spazi vuoti nei nomi delle colonne
+        df = pd.read_csv(url)
+        df.columns = df.columns.str.strip()
+        return df
     except:
         return None
 
@@ -26,7 +29,7 @@ if st.sidebar.button("🔄 Aggiorna Pagina"):
 
 menu = st.sidebar.radio("Navigazione", ["📊 Classifica", "🎲 Il Dado", "🃏 Carte Segrete", "🎥 Highlights"])
 
-# --- CRONACA ---
+# --- SEZIONE CRONACA ---
 df_cronaca = carica_dati("Cronaca")
 if df_cronaca is not None and not df_cronaca.empty:
     ultimo = df_cronaca.iloc[-1]
@@ -38,25 +41,25 @@ if menu == "📊 Classifica":
     df = carica_dati("Classifica")
     
     if df is not None:
-        # Pulizia: togliamo righe vuote e ordiniamo
-        df = df.dropna(subset=['Squadre']) if 'Squadre' in df.columns else df.dropna(subset=['Squadre'])
+        # Ordiniamo per punti
         df['Punti'] = pd.to_numeric(df['Punti'], errors='coerce').fillna(0)
         df_ordinata = df.sort_values(by="Punti", ascending=False).reset_index(drop=True)
         
-        # VISUALIZZAZIONE LOGHI (Usiamo 'Stemma' perché è il nome nel tuo foglio)
+        # VISUALIZZAZIONE
+        # Usiamo 'Stemma' (deve essere identico a cella F1)
         st.dataframe(
             df_ordinata.style.apply(colora_podio, axis=1),
             column_config={
-                "Stemma": st.column_config.ImageColumn("🏆", width="small"),
+                "Stemma": st.column_config.ImageColumn("Logo", width="small"),
                 "Punti": st.column_config.NumberColumn(format="%d 🏆")
             },
             use_container_width=True,
             hide_index=True
         )
     else:
-        st.error("Assicurati che il foglio si chiami 'Classifica' e la colonna F 'Stemma'")
+        st.error("Errore nel caricamento. Verifica i nomi dei fogli!")
 
-# --- RESTO DELLE FUNZIONI ---
+# (Dado, Carte e Highlights rimangono invariati...)
 elif menu == "🎲 Il Dado":
     st.header("Lancio del Dado")
     if st.button("Lancia il Dado 🎲"):
