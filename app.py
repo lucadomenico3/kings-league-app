@@ -8,7 +8,8 @@ def carica_dati(nome_foglio):
     try:
         sheet_id = "1AlDJPezf9n86qapVEzrpn7PEdehmOrnQbKJH2fYE3uY"
         url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={nome_foglio}"
-        return pd.read_csv(url)
+        # Forziamo la lettura di tutte le colonne come stringhe per i link
+        return pd.read_csv(url, dtype=str)
     except:
         return None
 
@@ -26,35 +27,36 @@ if st.sidebar.button("🔄 Aggiorna Pagina"):
 
 menu = st.sidebar.radio("Navigazione", ["📊 Classifica", "🎲 Il Dado", "🃏 Carte Segrete", "🎥 Highlights"])
 
-# --- CRONACA ---
+# --- SEZIONE CRONACA ---
 df_cronaca = carica_dati("Cronaca")
 if df_cronaca is not None and not df_cronaca.empty:
     ultimo = df_cronaca.iloc[-1]
     st.info(f"🔴 **LIVE {ultimo['Ora']}:** {ultimo['Evento']}")
 
-# --- LOGICA PAGINE ---
+# --- PAGINA CLASSIFICA ---
 if menu == "📊 Classifica":
     st.header("Classifica Live")
     df = carica_dati("Classifica")
     
     if df is not None:
-        # Pulizia dati: rimuoviamo eventuali righe completamente vuote
-        df = df.dropna(subset=['Squadre'])
+        # Convertiamo i punti in numeri per l'ordinamento
+        df['Punti'] = pd.to_numeric(df['Punti'], errors='coerce').fillna(0)
         df_ordinata = df.sort_values(by="Punti", ascending=False).reset_index(drop=True)
         
-        # VISUALIZZAZIONE CORRETTA LOGHI
+        # MOSTRA TABELLA CON LOGHI
         st.dataframe(
             df_ordinata.style.apply(colora_podio, axis=1),
             column_config={
-                "Logo": st.column_config.ImageColumn("🏆 Stemma"), # Qui 'Logo' deve corrispondere alla cella F1
+                "Logo": st.column_config.ImageColumn("Stemma"), # 'Logo' deve essere uguale a cella F1
                 "Punti": st.column_config.NumberColumn(format="%d 🏆")
             },
             use_container_width=True,
             hide_index=True
         )
     else:
-        st.error("Controlla i nomi dei fogli su Google Sheets!")
+        st.error("Errore: Il foglio 'Classifica' non risponde. Controlla il nome del tab!")
 
+# (Il resto delle funzioni Dado e Carte rimane invariato...)
 elif menu == "🎲 Il Dado":
     st.header("Lancio del Dado")
     if st.button("Lancia il Dado 🎲"):
@@ -68,8 +70,8 @@ elif menu == "🃏 Carte Segrete":
         st.warning(f"### Carta: {random.choice(['🎯 RIGORE', '🧤 PORTIERE FUORI', '💰 GOL DOPPIO', '🚫 SANZIONE'])}")
 
 elif menu == "🎥 Highlights":
-    st.header("Highlights")
+    st.header("Highlights Video")
     link = st.text_input("Link Video:", "")
     if link:
         if "youtube" in link or "youtu.be" in link: st.video(link)
-        else: st.link_button("Guarda il Video Esterno 📺", link)
+        else: st.link_button("Guarda il Video 📺", link)
