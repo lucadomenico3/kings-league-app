@@ -2,13 +2,13 @@ import streamlit as st
 import pandas as pd
 import random
 
+# Configurazione Pagina
 st.set_page_config(page_title="Kings League Manager", layout="wide", page_icon="👑")
 
 def carica_dati(nome_foglio):
     try:
         sheet_id = "1AlDJPezf9n86qapVEzrpn7PEdehmOrnQbKJH2fYE3uY"
         url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={nome_foglio}"
-        # Carichiamo i dati assicurandoci che non ci siano spazi vuoti nei nomi delle colonne
         df = pd.read_csv(url)
         df.columns = df.columns.str.strip()
         return df
@@ -27,7 +27,8 @@ st.title("👑 Kings League Manager")
 if st.sidebar.button("🔄 Aggiorna Pagina"):
     st.rerun()
 
-menu = st.sidebar.radio("Navigazione", ["📊 Classifica", "🎲 Il Dado", "🃏 Carte Segrete", "🎥 Highlights"])
+# Menu semplificato
+menu = st.sidebar.radio("Navigazione", ["📊 Classifica", "🎲 Il Dado", "🃏 Carte Segrete"])
 
 # --- SEZIONE CRONACA ---
 df_cronaca = carica_dati("Cronaca")
@@ -41,12 +42,9 @@ if menu == "📊 Classifica":
     df = carica_dati("Classifica")
     
     if df is not None:
-        # Ordiniamo per punti
         df['Punti'] = pd.to_numeric(df['Punti'], errors='coerce').fillna(0)
         df_ordinata = df.sort_values(by="Punti", ascending=False).reset_index(drop=True)
         
-        # VISUALIZZAZIONE
-        # Usiamo 'Stemma' (deve essere identico a cella F1)
         st.dataframe(
             df_ordinata.style.apply(colora_podio, axis=1),
             column_config={
@@ -57,23 +55,19 @@ if menu == "📊 Classifica":
             hide_index=True
         )
     else:
-        st.error("Errore nel caricamento. Verifica i nomi dei fogli!")
+        st.error("Errore nel caricamento della Classifica.")
 
-# (Dado, Carte e Highlights rimangono invariati...)
+# --- DADO ---
 elif menu == "🎲 Il Dado":
     st.header("Lancio del Dado")
+    st.write("Usa questo dado al minuto 18 per decidere il formato della partita!")
     if st.button("Lancia il Dado 🎲"):
         st.balloons()
-        st.success(f"Risultato: {random.choice(['1vs1', '2vs2', '3vs3', '4vs4', '5vs5', 'SCONTRO TOTALE'])}")
+        st.success(f"### Risultato: {random.choice(['1vs1', '2vs2', '3vs3', '4vs4', '5vs5', 'SCONTRO TOTALE'])}")
 
+# --- CARTE ---
 elif menu == "🃏 Carte Segrete":
     st.header("Arma Segreta")
-    if st.button("Pesca 🃏"):
-        st.warning(f"Carta: {random.choice(['🎯 RIGORE', '🧤 PORTIERE FUORI', '💰 GOL DOPPIO', '🚫 SANZIONE'])}")
-
-elif menu == "🎥 Highlights":
-    st.header("Highlights Video")
-    link = st.text_input("Link Video:", "")
-    if link:
-        if "youtube" in link or "youtu.be" in link: st.video(link)
-        else: st.link_button("Guarda Video 📺", link)
+    st.write("Ogni presidente pesca la sua carta prima del fischio d'inizio.")
+    if st.button("Pesca una Carta 🃏"):
+        st.warning(f"### Carta Estratta: {random.choice(['🎯 RIGORE', '🧤 PORTIERE FUORI', '💰 GOL DOPPIO', '🚫 SANZIONE', '🃏 RUBACARTA'])}")
