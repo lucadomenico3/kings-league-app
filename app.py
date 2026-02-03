@@ -3,43 +3,41 @@ import pandas as pd
 import random
 
 # Configurazione Pagina
-st.set_page_config(page_title="Kings League Manager", layout="wide")
+st.set_page_config(page_title="Kings League Manager", layout="wide", page_icon="👑")
 
-# Funzione per leggere i dati da Google Sheets
+# Funzione dati
 def carica_dati():
-    # Trasformiamo il tuo link in un formato leggibile dal codice
     sheet_id = "1AlDJPezf9n86qapVEzrpn7PEdehmOrnQbKJH2fYE3uY"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv"
     return pd.read_csv(url)
 
-st.title("👑 Kings League Paesana")
+st.title("👑 Kings League Manager")
 
-# --- SIDEBAR / MENU ---
-menu = st.sidebar.radio("Navigazione", ["📊 Classifica Live", "🎲 Il Dado", "📱 Social"])
+# Menu
+menu = st.sidebar.radio("Navigazione", ["📊 Classifica", "🎲 Il Dado", "🃏 Carte Segrete"])
 
-if menu == "📊 Classifica Live":
-    st.header("Classifica in Tempo Reale")
-    try:
-        df = carica_dati()
-        # Ordiniamo per Punti (dal più alto al più basso)
-        df = df.sort_values(by="Punti", ascending=False)
-        st.dataframe(df, use_container_width=True, hide_index=True)
-        st.success("Dati aggiornati dal Foglio Google!")
-    except:
-        st.error("Caricamento dati fallito. Controlla il Foglio Google!")
+if menu == "📊 Classifica":
+    st.header("Classifica Live")
+    df = carica_dati()
+    st.dataframe(df.sort_values(by="Punti", ascending=False), use_container_width=True, hide_index=True)
 
 elif menu == "🎲 Il Dado":
-    st.header("Il Momento del Dado!")
-    st.write("Clicca il tasto per decidere il formato della partita (minuto 18)")
-    
-    opzioni_dado = ["1 vs 1 (Portiere fisso)", "2 vs 2", "3 vs 3", "4 vs 4", "5 vs 5", "🚀 Scontro Totale"]
-    
+    st.header("Lancio del Dado (Minuto 18)")
     if st.button("Lancia il Dado 🎲"):
-        risultato = random.choice(opzioni_dado)
+        risultati = ["1 vs 1", "2 vs 2", "3 vs 3", "4 vs 4", "5 vs 5", "🚀 SCONTRO TOTALE"]
+        scelta = random.choice(risultati)
         st.balloons()
-        st.markdown(f"## Risultato: **{risultato}**")
+        st.success(f"Si gioca in: {scelta}")
 
-elif menu == "📱 Social":
-    st.header("Highlights & Community")
-    st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ") # Qui metteremo i tuoi video!
-    st.write("Commenta le giocate della giornata!")
+elif menu == "🃏 Carte Segrete":
+    st.header("Estrai la tua Arma Segreta")
+    mazzo = [
+        "🎯 RIGORE: Calcia un rigore subito!",
+        "🧤 PORTIERE FUORI: Un giocatore avversario fuori per 2 min",
+        "💰 GOL DOPPIO: I tuoi gol valgono doppio per 5 minuti",
+        "🚫 SANZIONE: Togli un giocatore avversario per 2 minuti",
+        "🃏 CARTA RUBATA: Ruba la carta all'avversario!"
+    ]
+    if st.button("Pesca una Carta 🃏"):
+        carta = random.choice(mazzo)
+        st.warning(f"La tua carta è: {carta}")
