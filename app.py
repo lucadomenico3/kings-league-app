@@ -15,6 +15,7 @@ def carica_dati(nome_foglio):
         sheet_id = "1AlDJPezf9n86qapVEzrpn7PEdehmOrnQbKJH2fYE3uY"
         url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={nome_foglio}"
         df = pd.read_csv(url)
+        # Rimuove spazi vuoti dai nomi delle colonne per evitare errori
         df.columns = df.columns.str.strip()
         return df
     except:
@@ -27,7 +28,7 @@ def colora_podio(row):
     if row.name == 2: return ['background-color: #CD7F32; color: black'] * len(row) # Bronzo
     return [''] * len(row)
 
-# 3. SIDEBAR
+# 3. SIDEBAR (Social & Menu)
 st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Instagram_logo_2016.svg/2048px-Instagram_logo_2016.svg.png", width=50)
 st.sidebar.markdown("### 📸 Kings Valdagri Cup")
 st.sidebar.write("Segui storie, gol e interviste!")
@@ -40,16 +41,16 @@ st.markdown("*Official App - Risultati e Classifiche in tempo reale*")
 if st.sidebar.button("🔄 Aggiorna Dati"):
     st.rerun()
 
-# Menu Navigazione (Aggiunto "Squadre")
+# Menu Navigazione
 menu = st.sidebar.radio("Menu", [
     "🏆 Classifica", 
-    "👕 Squadre",      # <--- NUOVO
+    "👕 Squadre",
     "⚽ Marcatori", 
     "📅 Calendario", 
     "📜 Regolamento"
 ])
 
-# --- LIVE TICKER ---
+# --- LIVE TICKER (News scorrevoli) ---
 df_cronaca = carica_dati("Cronaca")
 if df_cronaca is not None and not df_cronaca.empty:
     ultimo = df_cronaca.iloc[-1]
@@ -62,11 +63,14 @@ if menu == "🏆 Classifica":
     st.header("Classifica Generale")
     df = carica_dati("Classifica")
     if df is not None:
+        # Conversione numeri per sicurezza
         cols_num = ['Punti', 'Vinte', 'GF', 'GS', 'DR', 'Gialli', 'Rossi']
         for c in cols_num:
             if c in df.columns:
                 df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0).astype(int)
         
+        # [cite_start]Ordinamento Ufficiale [cite: 73-80]
+        # 1. Punti > 2. DR > 3. GF > 4. GS (minore) > 5. Disciplina
         sort_by = ["Punti", "DR", "GF", "GS"]
         ascending_order = [False, False, False, True]
         
@@ -81,7 +85,7 @@ if menu == "🏆 Classifica":
             column_config={
                 "Stemma": st.column_config.ImageColumn("🛡️"),
                 "Punti": st.column_config.NumberColumn("PTS 🏆", format="%d"),
-                "DR": st.column_config.NumberColumn("Diff."),
+                "DR": st.column_config.NumberColumn("Diff.", help="Differenza Reti"),
                 "GF": st.column_config.NumberColumn("GF"),
                 "GS": st.column_config.NumberColumn("GS"),
                 "Gialli": st.column_config.NumberColumn("🟨"),
@@ -91,27 +95,19 @@ if menu == "🏆 Classifica":
             hide_index=True
         )
 
-# 2. SQUADRE (NUOVO)
+# 2. SQUADRE (Generato da Marcatori)
 elif menu == "👕 Squadre":
     st.header("Le Rose del Torneo")
     st.markdown("Clicca sulla squadra per vedere i giocatori.")
     
-    # Usiamo il foglio Marcatori che contiene già Nomi e Squadre
     df_players = carica_dati("Marcatori")
     
     if df_players is not None and 'Squadra' in df_players.columns:
-        # Prende la lista unica delle squadre
         squadre_uniche = df_players['Squadra'].unique()
-        
-        # Per ogni squadra crea un menu a tendina
         for team in squadre_uniche:
             with st.expander(f"🛡️ {team}", expanded=False):
-                # Filtra solo i giocatori di quella squadra
                 roster = df_players[df_players['Squadra'] == team][['Giocatore', 'Gol']]
-                
-                # Ordina alfabeticamente
                 roster = roster.sort_values(by="Giocatore")
-                
                 st.dataframe(
                     roster,
                     use_container_width=True,
@@ -130,10 +126,13 @@ elif menu == "⚽ Marcatori":
     df_m = carica_dati("Marcatori")
     
     if df_m is not None:
+        # Forza maiuscola iniziale per trovare le colonne (Gol/gol/GOL)
         df_m.columns = [c.capitalize() for c in df_m.columns]
         
         if 'Gol' in df_m.columns and 'Giocatore' in df_m.columns:
             df_m['Gol'] = pd.to_numeric(df_m['Gol'], errors='coerce').fillna(0).astype(int)
+            
+            # Calcolo max per barra progresso
             max_gol = int(df_m['Gol'].max())
             if max_gol == 0: max_gol = 1
             
@@ -153,38 +152,64 @@ elif menu == "⚽ Marcatori":
                 }
             )
 
-# 4. CALENDARIO
+# 4. CALENDARIO AUTOMATICO
 elif menu == "📅 Calendario":
     st.header("📅 Programma Partite")
     df_cal = carica_dati("Calendario")
+    
     if df_cal is not None:
-        if 'Risultato' in df_cal.columns:
-            df_cal['Risultato'] = df_cal['Risultato'].fillna("-")
+        # Controlla se abbiamo le colonne nuove per l'automazione
+        required_cols = ['Casa', 'Ospite', 'Gol Casa', 'Gol Ospite', 'Ora', 'Stato']
         
-        st.dataframe(
-            df_cal, 
-            use_container_width=True, 
-            hide_index=True,
-            column_config={
-                "Stato": st.column_config.SelectboxColumn(
-                    "Stato Match",
-                    options=["In programma", "🔥 LIVE", "Terminata"],
-                    disabled=True 
-                )
-            }
-        )
+        # Se trova le colonne nuove (Casa/Ospite...), usa la logica automatica
+        if all(col in df_cal.columns for col in required_cols):
+            # Formattazione gol: toglie i decimali e mette vuoto se manca il dato
+            df_cal['Gol Casa'] = pd.to_numeric(df_cal['Gol Casa'], errors='coerce').fillna(-1).astype(int).astype(str).replace('-1', '')
+            df_cal['Gol Ospite'] = pd.to_numeric(df_cal['Gol Ospite'], errors='coerce').fillna(-1).astype(int).astype(str).replace('-1', '')
+            
+            # Crea colonna Risultato (es: "3 - 2" oppure "-")
+            df_cal['Risultato'] = df_cal.apply(
+                lambda x: f"{x['Gol Casa']} - {x['Gol Ospite']}" if x['Gol Casa'] != "" else "-", axis=1
+            )
+            
+            df_display = df_cal[['Ora', 'Stato', 'Casa', 'Risultato', 'Ospite']]
+            
+            st.dataframe(
+                df_display, 
+                use_container_width=True, 
+                hide_index=True,
+                column_config={
+                    "Stato": st.column_config.SelectboxColumn(
+                        "Stato",
+                        options=["In programma", "🔥 LIVE", "Terminata"],
+                        disabled=True,
+                        width="small"
+                    ),
+                    "Casa": st.column_config.TextColumn("Casa", width="medium"),
+                    "Ospite": st.column_config.TextColumn("Ospite", width="medium"),
+                    "Risultato": st.column_config.TextColumn("Score", width="small"),
+                    "Ora": st.column_config.TextColumn("Orario", width="small")
+                }
+            )
+        # Fallback: Se usi ancora il vecchio sistema (colonna unica 'Sfida')
+        elif 'Sfida' in df_cal.columns and 'Risultato' in df_cal.columns:
+             st.dataframe(df_cal, use_container_width=True, hide_index=True)
+        else:
+            st.error("⚠️ Il foglio Calendario deve avere le colonne: Ora, Casa, Ospite, Gol Casa, Gol Ospite, Stato.")
 
-# 5. REGOLAMENTO
+# 5. REGOLAMENTO UFFICIALE
 elif menu == "📜 Regolamento":
     st.header("📜 Regolamento Ufficiale")
     
     with st.expander("🏆 1. Punteggi e Classifica", expanded=True):
         st.markdown("""
         * **3 Punti:** Vittoria.
-        * **2 Punti:** Vittoria Shoot-out.
-        * **1 Punto:** Sconfitta Shoot-out.
+        * **2 Punti:** Vittoria agli Shoot-out.
+        * **1 Punto:** Sconfitta agli Shoot-out.
         * **0 Punti:** Sconfitta.
-        * **Spareggio:** 1. DR - 2. GF - 3. GS - 4. Disciplina.
+        
+        [cite_start]**Criteri Spareggio:** [cite: 73-80]
+        1. Diff. Reti (DR) - 2. Gol Fatti (GF) - 3. Gol Subiti (GS) - 4. Disciplina.
         """)
 
     with st.expander("⏱️ 2. Fasi della Partita"):
@@ -198,6 +223,7 @@ elif menu == "📜 Regolamento":
         st.markdown("""
         * **Gol Doppio:** 4 min (x2).
         * **Sospensione:** 3 min fuori.
+        * **Rigore Presidenziale:** Solo se c'è il Presidente.
         * **Giallo:** 2 min fuori.
         * **Rosso:** 4 min fuori.
         """)
