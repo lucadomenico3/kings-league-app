@@ -15,6 +15,7 @@ def carica_dati(nome_foglio):
         sheet_id = "1AlDJPezf9n86qapVEzrpn7PEdehmOrnQbKJH2fYE3uY"
         url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={nome_foglio}"
         df = pd.read_csv(url)
+        # Pulisce i nomi delle colonne da spazi extra (es. "Gol " diventa "Gol")
         df.columns = df.columns.str.strip()
         return df
     except:
@@ -27,7 +28,7 @@ def colora_podio(row):
     if row.name == 2: return ['background-color: #CD7F32; color: black'] * len(row) # Bronzo
     return [''] * len(row)
 
-# 3. SIDEBAR (Cuore Social)
+# 3. SIDEBAR
 st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Instagram_logo_2016.svg/2048px-Instagram_logo_2016.svg.png", width=50)
 st.sidebar.markdown("### 📸 Kings Valdagri Cup")
 st.sidebar.write("Segui storie, gol e interviste!")
@@ -48,7 +49,7 @@ menu = st.sidebar.radio("Menu", [
     "📜 Regolamento"
 ])
 
-# --- LIVE TICKER (News scorrevoli) ---
+# --- LIVE TICKER ---
 df_cronaca = carica_dati("Cronaca")
 if df_cronaca is not None and not df_cronaca.empty:
     ultimo = df_cronaca.iloc[-1]
@@ -61,24 +62,15 @@ if menu == "🏆 Classifica":
     st.header("Classifica Generale")
     df = carica_dati("Classifica")
     if df is not None:
-        # Conversione numeri per evitare errori
         cols_num = ['Punti', 'Vinte', 'GF', 'GS', 'DR', 'Gialli', 'Rossi']
         for c in cols_num:
             if c in df.columns:
                 df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0).astype(int)
         
-        # Ordinamento Ufficiale (Regolamento Art. [cite_start]3) [cite: 73-80]
-        # 1. Punti
-        # 2. Differenza Reti
-        # 3. Gol Fatti
-        # 4. Gol Subiti (crescente)
-        # 5. Ammonizioni (crescente)
-        # 6. Espulsioni (crescente)
-        
+        # Ordinamento Ufficiale
         sort_by = ["Punti", "DR", "GF", "GS"]
         ascending_order = [False, False, False, True]
         
-        # Se nel foglio ci sono le colonne disciplinari, le usiamo
         if 'Gialli' in df.columns and 'Rossi' in df.columns:
             sort_by.extend(["Gialli", "Rossi"])
             ascending_order.extend([True, True])
@@ -90,35 +82,54 @@ if menu == "🏆 Classifica":
             column_config={
                 "Stemma": st.column_config.ImageColumn("🛡️"),
                 "Punti": st.column_config.NumberColumn("PTS 🏆", format="%d"),
-                "DR": st.column_config.NumberColumn("Diff.", help="Differenza Reti"),
-                "GF": st.column_config.NumberColumn("GF", help="Gol Fatti"),
-                "GS": st.column_config.NumberColumn("GS", help="Gol Subiti"),
-                "Gialli": st.column_config.NumberColumn("🟨", help="Ammonizioni"),
-                "Rossi": st.column_config.NumberColumn("🟥", help="Espulsioni")
+                "DR": st.column_config.NumberColumn("Diff."),
+                "GF": st.column_config.NumberColumn("GF"),
+                "GS": st.column_config.NumberColumn("GS"),
+                "Gialli": st.column_config.NumberColumn("🟨"),
+                "Rossi": st.column_config.NumberColumn("🟥")
             },
             use_container_width=True, 
             hide_index=True
         )
 
-# 2. MARCATORI
+# 2. MARCATORI (SEZIONE AGGIORNATA)
 elif menu == "⚽ Marcatori":
     st.header("👑 Bomber della Lega")
     df_m = carica_dati("Marcatori")
+    
     if df_m is not None:
-        df_m['Gol'] = pd.to_numeric(df_m['Gol'], errors='coerce').fillna(0).astype(int)
-        st.dataframe(
-            df_m.sort_values(by="Gol", ascending=False), 
-            use_container_width=True, 
-            hide_index=True,
-            column_config={
-                "Gol": st.column_config.ProgressColumn(
-                    "Reti", 
-                    format="%d ⚽", 
-                    min_value=0, 
-                    max_value=df_m['Gol'].max()
-                )
-            }
-        )
+        # Controllo se la colonna Gol esiste (anche se scritta minuscola)
+        df_m.columns = [c.capitalize() for c in df_m.columns] # Forza maiuscola iniziale
+        
+        if 'Gol' in df_m.columns and 'Giocatore' in df_m.columns:
+            # Converte i Gol in numeri e mette 0 se vuoto
+            df_m['Gol'] = pd.to_numeric(df_m['Gol'], errors='coerce').fillna(0).astype(int)
+            
+            # Calcola il massimo per la barra (minimo 1 per evitare errori se è tutto 0)
+            max_gol = int(df_m['Gol'].max())
+            if max_gol == 0: 
+                max_gol = 1
+            
+            st.dataframe(
+                df_m.sort_values(by="Gol", ascending=False), 
+                use_container_width=True, 
+                hide_index=True,
+                column_config={
+                    "Giocatore": st.column_config.TextColumn("Giocatore", width="medium"),
+                    "Squadra": st.column_config.TextColumn("Squadra", width="small"),
+                    "Gol": st.column_config.ProgressColumn(
+                        "Reti", 
+                        format="%d ⚽", 
+                        min_value=0, 
+                        max_value=max_gol
+                    )
+                }
+            )
+        else:
+            st.error("⚠️ Errore colonne: Assicurati che nel foglio ci siano le colonne 'Giocatore' e 'Gol'.")
+            st.write("Colonne trovate:", df_m.columns.tolist())
+    else:
+        st.warning("Nessun dato trovato. Controlla il foglio 'Marcatori'.")
 
 # 3. CALENDARIO
 elif menu == "📅 Calendario":
@@ -136,78 +147,37 @@ elif menu == "📅 Calendario":
                 "Stato": st.column_config.SelectboxColumn(
                     "Stato Match",
                     options=["In programma", "🔥 LIVE", "Terminata"],
-                    disabled=True # Solo lettura per gli utenti
+                    disabled=True 
                 )
             }
         )
 
-# 4. REGOLAMENTO DETTAGLIATO
+# 4. REGOLAMENTO
 elif menu == "📜 Regolamento":
     st.header("📜 Regolamento Ufficiale")
-    st.markdown("Tutte le regole per seguire al meglio la Kings Valdagri Cup.")
     
-    # [cite_start]SEZIONE 1: PUNTEGGI [cite: 58-62]
     with st.expander("🏆 1. Punteggi e Classifica", expanded=True):
         st.markdown("""
-        La partita non può finire in pareggio.
-        * **3 Punti:** Vittoria nei tempi regolamentari.
-        * **2 Punti:** Vittoria agli Shoot-out.
-        * **1 Punto:** Sconfitta agli Shoot-out.
-        * **0 Punti:** Sconfitta nei tempi regolamentari.
+        * **3 Punti:** Vittoria.
+        * **2 Punti:** Vittoria Shoot-out.
+        * **1 Punto:** Sconfitta Shoot-out.
+        * **0 Punti:** Sconfitta.
         
-        [cite_start]**In caso di arrivo a pari punti, l'ordine è deciso da:** [cite: 73-80]
-        1.  Miglior Differenza Reti (DR).
-        2.  Maggior numero di Gol Fatti (GF).
-        3.  Minor numero di Gol Subiti (GS).
-        4.  Minor numero di Ammonizioni (Coppa Disciplina).
-        5.  Minor numero di Espulsioni.
-        6.  Lancio della monetina.
+        **Spareggio:**
+        1. Diff. Reti (DR) - 2. Gol Fatti (GF) - 3. Gol Subiti (GS) - 4. Disciplina.
         """)
 
-    # [cite_start]SEZIONE 2: SVOLGIMENTO [cite: 83-121]
-    with st.expander("⏱️ 2. Fasi della Partita (40 Minuti)"):
+    with st.expander("⏱️ 2. Fasi della Partita"):
         st.markdown("""
-        **PRIMO TEMPO (20')**
-        * **Min 0-1:** 1 vs 1 (Portieri bloccati in area).
-        * **Min 1-2:** 2 vs 2 (Solo portiere usa mani).
-        * **Min 2-3:** 3 vs 3.
-        * **Min 3-4:** 4 vs 4.
-        * **Min 4-17:** 5 vs 5 (Si possono usare le Carte).
-        * **Min 17-20:** ⚽ **GOL DOPPIO** (Nessuna carta attivabile).
-        
-        **SECONDO TEMPO (20')**
-        * **Min 20-23:** 🎲 **DADO** (Lancio decide: 1vs1, 2vs2 o 3vs3).
-        * **Min 23-36:** 5 vs 5 (Si possono usare le Carte).
-        * **Min 36-38:** ⚽ **GOL DOPPIO** (Finale di gara).
+        * **Min 0-1:** 1 vs 1.
+        * **Min 18:** Dado (Min 20-23).
+        * **Min 36:** Match Ball.
         """)
 
-    # [cite_start]SEZIONE 3: CARTE [cite: 27-38]
-    with st.expander("🃏 3. Carte Segrete & Bonus"):
+    with st.expander("🃏 3. Carte e Sanzioni"):
         st.markdown("""
-        *Le carte possono essere giocate dal 5' al 17' e dal 23' al 36'.*
-        
-        * ⚽ **Gol Doppio:** Per 4 minuti i gol valgono x2.
-        * 🛑 **Sospensione:** Un avversario esce per 3 minuti (anche se prende gol).
-        * 🥅 **Rigore Extra:** Un rigore classico aggiuntivo.
-        * 🤾 **Shoot-out:** Un rigore in movimento (5 secondi tempo max).
-        * 🌟 **Star Player:** Il gol del giocatore designato vale doppio.
-        * 🃏 **Joker:** Ruba la carta avversaria o ne copia una a scelta.
-        * 👔 **Rigore Presidenziale:** Chiamabile solo se presente il Presidente.
-        """)
-
-    # [cite_start]SEZIONE 4: SANZIONI [cite: 139-151]
-    with st.expander("⚖️ 4. Cartellini e Sanzioni"):
-        st.markdown("""
-        * 🟨 **Cartellino Giallo:** Fuori per **2 minuti**. Se la squadra subisce gol, il giocatore rientra.
-        * 🟥 **Cartellino Rosso:** Espulsione definitiva. Squadra in inferiorità per **4 minuti** fissi (anche se subisce gol).
-        """)
-
-    # [cite_start]SEZIONE 5: SHOOT-OUT [cite: 132-138]
-    with st.expander("🥅 5. Regole Shoot-out"):
-        st.markdown("""
-        * Partenza da centrocampo palla al piede.
-        * Tempo massimo: **5 secondi** dal primo tocco.
-        * Il portiere non può uscire dall'area durante l'azione.
-        * Se il portiere tocca la palla e questa non entra, l'azione è finita.
-        * Gol valido solo se la palla entra prima dello scadere del tempo.
+        * **Gol Doppio:** 4 min (x2).
+        * **Sospensione:** 3 min fuori.
+        * **Giallo:** 2 min fuori.
+        * **Rosso:** 4 min fuori.
         """)
