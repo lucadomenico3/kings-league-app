@@ -12,6 +12,7 @@ st.set_page_config(
 # 2. FUNZIONE CARICAMENTO DATI
 def carica_dati(nome_foglio):
     try:
+        # Assicurati che l'ID del foglio sia corretto
         sheet_id = "1AlDJPezf9n86qapVEzrpn7PEdehmOrnQbKJH2fYE3uY"
         url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={nome_foglio}"
         df = pd.read_csv(url)
@@ -33,7 +34,7 @@ st.sidebar.title("🏆 Menu Torneo")
 if st.sidebar.button("🔄 Aggiorna Dati"):
     st.rerun()
 
-# Menu semplificato (rimossi Dado e Carte)
+# Menu semplificato
 menu = st.sidebar.radio("Navigazione", ["📊 Classifica", "⚽ Marcatori", "📅 Calendario", "📜 Regolamento"])
 
 # --- LIVE TICKER ---
@@ -62,13 +63,15 @@ elif menu == "⚽ Marcatori":
 
 elif menu == "📅 Calendario":
     st.header("Programma Partite")
-    df_cal = carica_dati("Calendario")
+    df_cal = carica_dati("Calendario") # Carica il foglio Calendario
     if df_cal is not None:
+        # Mostra solo le colonne del calendario (Ora, Sfida, Stato)
         st.dataframe(df_cal, use_container_width=True, hide_index=True)
+    else:
+        st.warning("Aggiungi i dati nel foglio 'Calendario' su Google Sheets.")
 
 elif menu == "📜 Regolamento":
     st.header("Regolamento Ufficiale")
-    # Puoi incollare qui il testo completo del tuo regolamento
     st.markdown("""
     ### 1. Formato Partite
     Le partite durano **40 minuti** (due tempi da 20). 
@@ -79,5 +82,5 @@ elif menu == "📜 Regolamento":
     2. Gol Fatti (GF)
     
     ### 3. Note Generali
-    Aggiungi qui eventuali altre regole specifiche del tuo torneo.
+    Aggiungi qui le tue regole personalizzate.
     """)
