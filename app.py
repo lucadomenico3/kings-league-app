@@ -8,6 +8,15 @@ st.set_page_config(
     page_icon="👑"
 )
 
+# --- TRUCCO PER NASCONDERE LE ICONE FASTIDIOSE (CSS) ---
+st.markdown("""
+<style>
+[data-testid="stElementToolbar"] {
+    display: none;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # 2. FUNZIONE CARICAMENTO DATI
 def carica_dati(nome_foglio):
     try:
@@ -56,18 +65,16 @@ if df_cronaca is not None and not df_cronaca.empty:
 
 # --- SEZIONI ---
 
-# 1. CLASSIFICA (Con PG)
+# 1. CLASSIFICA
 if menu == "🏆 Classifica":
     st.header("Classifica Generale")
     df = carica_dati("Classifica")
     if df is not None:
-        # Aggiungo 'PG' alla lista delle colonne numeriche
         cols_num = ['Punti', 'PG', 'Vinte', 'GF', 'GS', 'DR', 'Gialli', 'Rossi']
         for c in cols_num:
             if c in df.columns:
                 df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0).astype(int)
         
-        # [cite_start]Ordinamento Ufficiale [cite: 73-80]
         sort_by = ["Punti", "DR", "GF", "GS"]
         ascending_order = [False, False, False, True]
         
@@ -77,21 +84,18 @@ if menu == "🏆 Classifica":
 
         df_ord = df.sort_values(by=sort_by, ascending=ascending_order).reset_index(drop=True)
         
-        # Configurazione colonne (Aggiunto PG)
-        col_config = {
-            "Stemma": st.column_config.ImageColumn("🛡️", width="small"),
-            "Punti": st.column_config.NumberColumn("PTS 🏆", format="%d"),
-            "PG": st.column_config.NumberColumn("PG", help="Partite Giocate"), # <--- NUOVA
-            "DR": st.column_config.NumberColumn("Diff.", help="Differenza Reti"),
-            "GF": st.column_config.NumberColumn("GF"),
-            "GS": st.column_config.NumberColumn("GS"),
-            "Gialli": st.column_config.NumberColumn("🟨"),
-            "Rossi": st.column_config.NumberColumn("🟥")
-        }
-
         st.dataframe(
             df_ord.style.apply(colora_podio, axis=1),
-            column_config=col_config,
+            column_config={
+                "Stemma": st.column_config.ImageColumn("🛡️", width="small"),
+                "Punti": st.column_config.NumberColumn("PTS 🏆", format="%d"),
+                "PG": st.column_config.NumberColumn("PG", help="Partite Giocate"),
+                "DR": st.column_config.NumberColumn("Diff."),
+                "GF": st.column_config.NumberColumn("GF"),
+                "GS": st.column_config.NumberColumn("GS"),
+                "Gialli": st.column_config.NumberColumn("🟨"),
+                "Rossi": st.column_config.NumberColumn("🟥")
+            },
             use_container_width=True, 
             hide_index=True
         )
@@ -153,7 +157,7 @@ elif menu == "📅 Calendario":
                     "Ora": st.column_config.TextColumn("Orario", width="small")
                 }
             )
-        elif 'Sfida' in df_cal.columns: # Fallback vecchio formato
+        elif 'Sfida' in df_cal.columns:
              st.dataframe(df_cal, use_container_width=True, hide_index=True)
 
 # 5. REGOLAMENTO
@@ -168,6 +172,15 @@ elif menu == "📜 Regolamento":
         * **Spareggio:** 1. DR - 2. GF - 3. GS - 4. Disciplina.
         """)
     with st.expander("⏱️ 2. Fasi della Partita"):
-        st.markdown("* **Min 0-1:** 1 vs 1. \n* **Min 18:** Dado (Min 20-23). \n* **Min 36:** Match Ball.")
+        st.markdown("""
+        * **Min 0-1:** 1 vs 1.
+        * **Min 18:** Dado (Min 20-23).
+        * **Min 36:** Match Ball.
+        """)
     with st.expander("🃏 3. Carte e Sanzioni"):
-        st.markdown("* **Gol Doppio:** 4 min (x2). \n* **Sospensione:** 3 min. \n* **Giallo:** 2 min. \n* **Rosso:** 4 min.")
+        st.markdown("""
+        * **Gol Doppio:** 4 min (x2).
+        * **Sospensione:** 3 min.
+        * **Giallo:** 2 min.
+        * **Rosso:** 4 min.
+        """)
