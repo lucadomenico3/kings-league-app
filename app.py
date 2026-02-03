@@ -1,10 +1,9 @@
 import streamlit as st
 import pandas as pd
-import random
 
 # 1. CONFIGURAZIONE PAGINA
 st.set_page_config(
-    page_title="Kings League Manager", 
+    page_title="Kings Valdagri Cup", 
     layout="wide", 
     page_icon="🏆"
 )
@@ -20,30 +19,27 @@ def carica_dati(nome_foglio):
     except:
         return None
 
-def colora_podio(row):
-    if row.name == 0: return ['background-color: #FFD700; color: black; font-weight: bold'] * len(row)
-    if row.name == 1: return ['background-color: #C0C0C0; color: black'] * len(row)
-    if row.name == 2: return ['background-color: #CD7F32; color: black'] * len(row)
-    return [''] * len(row)
-
 # 3. TITOLO E SIDEBAR
-st.title("👑 Kings League Manager")
+st.title("👑 Kings Valdagri Cup")
 
-st.sidebar.title("🏆 Menu Torneo")
+# METODO 1: Pulsante Social nella Sidebar
+st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Instagram_logo_2016.svg/2048px-Instagram_logo_2016.svg.png", width=30)
+st.sidebar.write("📸 **Seguici su Instagram**")
+st.sidebar.link_button("kings_valdagri_cup", "https://www.instagram.com/kings_valdagri_cup/")
+st.sidebar.markdown("---")
+
 if st.sidebar.button("🔄 Aggiorna Dati"):
     st.rerun()
 
-menu = st.sidebar.radio("Navigazione", ["📊 Classifica", "⚽ Marcatori", "📅 Calendario", "📜 Regolamento"])
+menu = st.sidebar.radio("Navigazione", ["📊 Classifica", "⚽ Marcatori", "📅 Calendario", "🎥 Highlights", "📜 Regolamento"])
 
 # --- LIVE TICKER ---
 df_cronaca = carica_dati("Cronaca")
 if df_cronaca is not None and not df_cronaca.empty:
-    ultimo = df_cronaca.iloc[-1]
-    st.info(f"🔴 **LIVE {ultimo['Ora']}:** {ultimo['Evento']}")
+    st.info(f"🔴 **LIVE {df_cronaca.iloc[-1]['Ora']}:** {df_cronaca.iloc[-1]['Evento']}")
 
 # --- SEZIONI ---
 
-# CLASSIFICA
 if menu == "📊 Classifica":
     st.header("Classifica Generale")
     df = carica_dati("Classifica")
@@ -52,9 +48,8 @@ if menu == "📊 Classifica":
             if c in df.columns:
                 df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0).astype(int)
         df_ord = df.sort_values(by=["Punti", "DR", "GF"], ascending=[False, False, False]).reset_index(drop=True)
-        st.dataframe(df_ord.style.apply(colora_podio, axis=1), column_config={"Stemma": st.column_config.ImageColumn("🛡️")}, use_container_width=True, hide_index=True)
+        st.dataframe(df_ord, column_config={"Stemma": st.column_config.ImageColumn("🛡️")}, use_container_width=True, hide_index=True)
 
-# MARCATORI
 elif menu == "⚽ Marcatori":
     st.header("Classifica Marcatori")
     df_m = carica_dati("Marcatori")
@@ -62,39 +57,38 @@ elif menu == "⚽ Marcatori":
         df_m['Gol'] = pd.to_numeric(df_m['Gol'], errors='coerce').fillna(0).astype(int)
         st.dataframe(df_m.sort_values(by="Gol", ascending=False), use_container_width=True, hide_index=True)
 
-# CALENDARIO & STORICO
 elif menu == "📅 Calendario":
     st.header("Calendario e Risultati")
     df_cal = carica_dati("Calendario")
     if df_cal is not None:
-        # Gestione colonna Risultato se presente
-        if 'Risultato' in df_cal.columns:
-            df_cal['Risultato'] = df_cal['Risultato'].fillna("-")
-        
-        st.dataframe(
-            df_cal, 
-            use_container_width=True, 
-            hide_index=True,
-            column_config={
-                "Risultato": st.column_config.TextColumn("Punteggio ⚽"),
-                "Stato": st.column_config.SelectboxColumn(
-                    "Stato",
-                    options=["In programma", "Live", "Terminata"]
-                )
-            }
-        )
-    else:
-        st.warning("Assicurati di avere un foglio 'Calendario' con le colonne: Ora, Sfida, Risultato, Stato.")
+        st.dataframe(df_cal, use_container_width=True, hide_index=True)
 
-# REGOLAMENTO
+# METODO 2 e 3: Sezione Video integrata
+elif menu == "🎥 Highlights":
+    st.header("🎥 Video e Highlights")
+    st.write("Resta aggiornato sui momenti più spettacolari del torneo.")
+    
+    # Pulsante grande per Instagram
+    st.link_button("Vedi tutti i Reel su Instagram 📸", "https://www.instagram.com/kings_valdagri_cup/")
+    
+    st.divider()
+    
+    # METODO 3: Archivio Permanente da Google Sheets
+    st.subheader("📺 Archivio Video Scelti")
+    df_vid = carica_dati("Video")
+    if df_vid is not None:
+        for index, row in df_vid.iterrows():
+            st.write(f"**{row['Titolo']}**")
+            # Nota: Alcuni browser bloccano l'embed diretto di Instagram per privacy. 
+            # In tal caso apparirà un link cliccabile.
+            st.video(row['Link'])
+    else:
+        st.info("Aggiungi i link ai post di Instagram nel foglio Google 'Video' per vederli qui.")
+
 elif menu == "📜 Regolamento":
     st.header("Regolamento Ufficiale")
     st.markdown("""
-    ### 📜 Norme del Torneo
-    * **Durata**: 40 minuti totali.
-    * **Punti**: 3 per la vittoria, 0 per la sconfitta.
-    * **Spareggio**: In caso di parità punti, conta la Differenza Reti (DR), poi i Gol Fatti (GF).
-    
-    ### ⚖️ Disciplina
-    * Il comportamento antisportivo comporterà sanzioni immediate.
+    ### 📜 Regole Principali
+    * **Punti**: Vittoria 3, Sconfitta 0.
+    * **Classifica**: In caso di pari merito conta la Differenza Reti (DR).
     """)
