@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import random
-import time
+import datetime
 
 # 1. CONFIGURAZIONE PAGINA
 st.set_page_config(
@@ -21,16 +21,18 @@ def carica_dati(nome_foglio):
     except:
         return None
 
+# Funzione estetica per il podio
 def colora_podio(row):
     if row.name == 0: return ['background-color: #FFD700; color: black; font-weight: bold'] * len(row)
     if row.name == 1: return ['background-color: #C0C0C0; color: black'] * len(row)
     if row.name == 2: return ['background-color: #CD7F32; color: black'] * len(row)
     return [''] * len(row)
 
-# 3. SIDEBAR
-st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Instagram_logo_2016.svg/2048px-Instagram_logo_2016.svg.png", width=30)
-st.sidebar.write("📸 **Kings Valdagri Cup**")
-st.sidebar.link_button("Segui su Instagram", "https://www.instagram.com/kings_valdagri_cup/")
+# 3. SIDEBAR E MENU
+# Immagine e Pulsante Instagram (Sempre visibili)
+st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Instagram_logo_2016.svg/2048px-Instagram_logo_2016.svg.png", width=40)
+st.sidebar.write("📸 **Seguici su Instagram**")
+st.sidebar.link_button("VAI ALLA PAGINA INSTAGRAM ↗️", "https://www.instagram.com/kings_valdagri_cup/")
 st.sidebar.markdown("---")
 
 st.title("👑 Kings Valdagri Cup Manager")
@@ -38,8 +40,16 @@ st.title("👑 Kings Valdagri Cup Manager")
 if st.sidebar.button("🔄 Aggiorna Dati"):
     st.rerun()
 
-# Aggiunto "Tool Arbitro" al menu
-menu = st.sidebar.radio("Navigazione", ["📊 Classifica", "⚽ Marcatori", "📅 Calendario", "🎲 Il Dado", "🃏 Carte Segrete", "👮 Tool Arbitro", "🎥 Highlights", "📜 Regolamento"])
+# Menu semplificato (Rimossa voce Highlights)
+menu = st.sidebar.radio("Navigazione", [
+    "📊 Classifica", 
+    "⚽ Marcatori", 
+    "📅 Calendario", 
+    "🎲 Il Dado", 
+    "🃏 Carte Segrete", 
+    "👮 Tool Arbitro", 
+    "📜 Regolamento"
+])
 
 # --- LIVE TICKER ---
 df_cronaca = carica_dati("Cronaca")
@@ -49,21 +59,20 @@ if df_cronaca is not None and not df_cronaca.empty:
 
 # --- SEZIONI ---
 
+# 1. CLASSIFICA
 if menu == "📊 Classifica":
     st.header("Classifica Generale")
     df = carica_dati("Classifica")
     if df is not None:
-        # Aggiunta gestione colonne disciplinari se presenti
         cols_num = ['Punti', 'Vinte', 'GF', 'GS', 'DR', 'Gialli', 'Rossi']
         for c in cols_num:
             if c in df.columns:
                 df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0).astype(int)
         
-        # Ordinamento: Punti > DR > GF > GS > Gialli (meno è meglio) > Rossi (meno è meglio)
+        # Ordinamento Ufficiale
         sort_by = ["Punti", "DR", "GF", "GS"]
         ascending_order = [False, False, False, True]
         
-        # Se hai aggiunto le colonne nel foglio, le usa per l'ordinamento
         if 'Gialli' in df.columns and 'Rossi' in df.columns:
             sort_by.extend(["Gialli", "Rossi"])
             ascending_order.extend([True, True])
@@ -84,6 +93,7 @@ if menu == "📊 Classifica":
             hide_index=True
         )
 
+# 2. MARCATORI
 elif menu == "⚽ Marcatori":
     st.header("Classifica Marcatori")
     df_m = carica_dati("Marcatori")
@@ -91,6 +101,7 @@ elif menu == "⚽ Marcatori":
         df_m['Gol'] = pd.to_numeric(df_m['Gol'], errors='coerce').fillna(0).astype(int)
         st.dataframe(df_m.sort_values(by="Gol", ascending=False), use_container_width=True, hide_index=True)
 
+# 3. CALENDARIO
 elif menu == "📅 Calendario":
     st.header("Calendario e Risultati")
     df_cal = carica_dati("Calendario")
@@ -99,63 +110,85 @@ elif menu == "📅 Calendario":
             df_cal['Risultato'] = df_cal['Risultato'].fillna("-")
         st.dataframe(df_cal, use_container_width=True, hide_index=True)
 
+# 4. DADO
 elif menu == "🎲 Il Dado":
-    st.header("🎲 Dado della Lega (Minuto 20-23)")
-    st.markdown("Da lanciare all'inizio del secondo tempo.")
+    st.header("🎲 Dado della Lega")
+    st.markdown("**Da lanciare all'inizio del secondo tempo (Min 20-23)**")
     if st.button("LANCIA IL DADO 🔥"):
         st.balloons()
-        esito = random.choice(['1 vs 1 (Portieri Bloccati)', '2 vs 2', '3 vs 3'])
+        esito = random.choice(['1 vs 1 (Portieri Bloccati in area)', '2 vs 2', '3 vs 3'])
         st.success(f"### Modalità di Gioco: **{esito}**")
 
+# 5. CARTE SEGRETE
 elif menu == "🃏 Carte Segrete":
     st.header("🃏 Pesca Carta Segreta")
     st.info("Utilizzabili dal min 5:00 al 16:59 e dal 23:00 al 35:59")
     if st.button("PESCA LA TUA ARMA ⚔️"):
-        carte = ['⚽ GOL DOPPIO (4 Minuti)', '🛑 SOSPENSIONE (2 Minuti)', '🥅 RIGORE EXTRA', '🤾 SHOOT-OUT', '🌟 STAR PLAYER', '🃏 JOKER']
+        carte = [
+            '⚽ GOL DOPPIO (4 Minuti)', 
+            '🛑 SOSPENSIONE (3 Minuti)', 
+            '🥅 RIGORE EXTRA', 
+            '🤾 SHOOT-OUT', 
+            '🌟 STAR PLAYER (Gol vale doppio)', 
+            '🃏 JOKER (Ruba o Copia)'
+        ]
         pescata = random.choice(carte)
         st.warning(f"### Hai pescato: **{pescata}**")
 
-# NUOVA SEZIONE: TOOL ARBITRO
+# 6. TOOL ARBITRO
 elif menu == "👮 Tool Arbitro":
     st.header("Strumenti di Gara")
-    
+    st.markdown("Calcola l'orario di rientro dei giocatori in base alle sanzioni.")
+
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("👔 Rigore Presidenziale")
-        st.write("Utilizzabile una volta per squadra (se presente il Presidente).")
+        st.subheader("👔 Azioni Speciali")
         if st.button("CHIAMA RIGORE PRESIDENZIALE 📢"):
             st.error("### ⚠️ RIGORE PRESIDENZIALE ATTIVATO!")
-            st.toast("Il gioco si ferma! Rigore per il Presidente!")
+            st.toast("Gioco fermo! Rigore per il Presidente!")
+        
+        st.divider()
+        st.info("Nota: L'orario calcolato si basa sull'ora del server. Usa sempre il tuo orologio per conferma.")
 
     with col2:
-        st.subheader("⏱️ Timer Rapidi")
-        if st.button("🟨 Timer Giallo (2 min)"):
-            with st.status("Giocatore espulso temporaneamente..."):
-                st.write("Partito!")
-                time.sleep(1) # Solo simulativo per non bloccare l'app
-                st.write("Usa il cronometro del telefono per precisione, ma ricorda: sono 2 minuti!")
+        st.subheader("⏱️ Calcolatori Penalità")
         
-        if st.button("⚽ Timer Gol Doppio (4 min)"):
-             st.info("Ricorda: Il Gol Doppio dura 4 minuti dal momento dell'attivazione.")
+        if st.button("🟨 Ammonizione (2 min)"):
+            adesso = datetime.datetime.now()
+            rientro = adesso + datetime.timedelta(minutes=2)
+            st.success(f"Rientro previsto: **{rientro.strftime('%H:%M:%S')}** (tra 2 min)")
+            
+        if st.button("🛑 Carta Sospensione (3 min)"):
+            adesso = datetime.datetime.now()
+            rientro = adesso + datetime.timedelta(minutes=3)
+            st.warning(f"Fine sospensione: **{rientro.strftime('%H:%M:%S')}** (tra 3 min)")
 
-elif menu == "🎥 Highlights":
-    st.header("🎥 Highlights Instagram")
-    st.link_button("Vedi tutti i Reel su Instagram 📸", "https://www.instagram.com/kings_valdagri_cup/")
-    st.divider()
-    df_vid = carica_dati("Video")
-    if df_vid is not None:
-        for index, row in df_vid.iterrows():
-            st.write(f"**{row['Titolo']}**")
-            st.video(row['Link'])
+        if st.button("🟥 Espulsione / ⚽ Gol Doppio (4 min)"):
+            adesso = datetime.datetime.now()
+            fine = adesso + datetime.timedelta(minutes=4)
+            st.error(f"Termine penalità/bonus: **{fine.strftime('%H:%M:%S')}** (tra 4 min)")
 
+# 7. REGOLAMENTO
 elif menu == "📜 Regolamento":
     st.header("📜 Regolamento Sintetico")
     st.markdown("""
-    ### 🏆 Punti
-    * **Vittoria:** 3 | **Shoot-out Vinto:** 2 | **Shoot-out Perso:** 1 | **Sconfitta:** 0
-    ### ⚖️ Spareggio
-    1. Diff. Reti | 2. Gol Fatti | 3. Gol Subiti | 4. Cartellini
-    ### ⏱️ Fasi
-    * **Min 0-1:** 1vs1 | **Min 18:** Dado | **Min 38:** Match Ball
+    ### 🏆 Punteggi
+    * **Vittoria:** 3 Punti
+    * **Vittoria agli Shoot-out:** 2 Punti
+    * **Sconfitta agli Shoot-out:** 1 Punto
+    * **Sconfitta:** 0 Punti
+    
+    ### ⚖️ Criteri Spareggio
+    1. Differenza Reti (DR)
+    2. Gol Fatti (GF)
+    3. Gol Subiti (GS)
+    4. Minor numero di Ammonizioni (Gialli)
+    5. Minor numero di Espulsioni (Rossi)
+    
+    ### ⏱️ Fasi Speciali
+    * **Min 0-1:** 1vs1
+    * **Min 18-20:** Gol Doppio Finale Primo Tempo
+    * **Min 20-23:** Dado (1vs1, 2vs2 o 3vs3)
+    * **Min 36:** Inizio Match Ball (se necessario)
     """)
