@@ -4,12 +4,23 @@ import requests
 from streamlit_lottie import st_lottie
 
 # 1. CONFIGURAZIONE PAGINA
+# Deve essere la prima istruzione assoluta
 st.set_page_config(
     page_title="Kings Valdagri Cup", 
     layout="wide", 
     page_icon="👑",
     initial_sidebar_state="expanded"
 )
+
+# --- TENTATIVO DI FORZARE L'ICONA SULLA HOME SCREEN (IOS/ANDROID) ---
+icon_url = "https://cdn-icons-png.flaticon.com/512/2545/2545603.png"
+st.markdown(f"""
+    <head>
+        <link rel="apple-touch-icon" href="{icon_url}">
+        <link rel="icon" type="image/png" href="{icon_url}">
+        <link rel="shortcut icon" href="{icon_url}">
+    </head>
+    """, unsafe_allow_html=True)
 
 # --- FUNZIONI UTILI ---
 def load_lottieurl(url):
@@ -22,6 +33,7 @@ def load_lottieurl(url):
 
 def carica_dati(nome_foglio):
     try:
+        # ID del tuo foglio Google
         sheet_id = "1AlDJPezf9n86qapVEzrpn7PEdehmOrnQbKJH2fYE3uY"
         url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={nome_foglio}"
         df = pd.read_csv(url)
@@ -30,24 +42,25 @@ def carica_dati(nome_foglio):
     except:
         return None
 
-# --- CSS STILE KINGS LEAGUE (CORRETTO PER MOBILE) ---
+# --- CSS STILE KINGS LEAGUE (DARK & GOLD) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;700&display=swap');
     
+    /* Sfondo e Font */
     .stApp {
         background-color: #121212;
         color: #ffffff;
         font-family: 'Roboto', sans-serif;
     }
     
-    /* 1. NASCONDIAMO SOLO IL FOOTER E LE ICONE TABELLA */
+    /* PULIZIA INTERFACCIA */
+    /* Nascondiamo footer e toolbar tabelle */
     footer {visibility: hidden; display: none !important;}
     [data-testid="stElementToolbar"] {display: none !important;}
-
-    /* NOTA: Ho riattivato l'Header e il MainMenu perché su mobile servono per aprire la sidebar */
-    /* header {visibility: hidden; display: none !important;}  <-- RIMOSSO PER FIX MOBILE */
-    /* #MainMenu {visibility: hidden; display: none !important;} <-- RIMOSSO PER FIX MOBILE */
+    
+    /* IMPORTANTE: Lasciamo visibile l'header per il menu mobile, ma lo coloriamo scuro */
+    header {background-color: #121212 !important;}
 
     /* Card Stile */
     div.css-card {
@@ -80,10 +93,11 @@ st.markdown("""
         border-radius: 20px;
         width: 100%;
         border: none;
+        transition: 0.3s;
     }
     div.stButton > button:hover { background-color: #ffea70; transform: scale(1.02); }
 
-    /* Live Score */
+    /* Live Score Dashboard */
     .live-score { font-size: 3rem; font-weight: bold; text-align: center; color: #fff; }
     .live-team { font-size: 1.2rem; color: #ccc; text-align: center; }
 </style>
@@ -115,10 +129,11 @@ with st.sidebar:
 
 # --- LOGICA PAGINE ---
 
-# 1. HOME
+# 1. HOME & LIVE
 if menu == "🏠 Home & Live":
     st.title("🏟️ Match Center")
     
+    # News scorrevole
     df_cronaca = carica_dati("Cronaca")
     if df_cronaca is not None and not df_cronaca.empty:
         df_cronaca = df_cronaca.dropna(subset=['Evento'])
@@ -126,13 +141,17 @@ if menu == "🏠 Home & Live":
             ultimo = df_cronaca.iloc[-1]
             st.warning(f"📢 **ULTIM'ORA {ultimo['Ora']}:** {ultimo['Evento']}")
     
+    # Controllo Match Live
     df_cal = carica_dati("Calendario")
     match_live = None
     if df_cal is not None and 'Stato' in df_cal.columns:
+        # Cerca la parola "LIVE" ignorando maiuscole/minuscole
         match_live = df_cal[df_cal['Stato'].str.contains("LIVE", case=False, na=False)]
 
     if match_live is not None and not match_live.empty:
+        # Se c'è una partita live, mostra il tabellone
         row = match_live.iloc[0]
+        # Pulizia numeri: da 3.0 a 3
         gc = int(float(row['Gol Casa'])) if pd.notna(row['Gol Casa']) and row['Gol Casa'] != "" else 0
         go = int(float(row['Gol Ospite'])) if pd.notna(row['Gol Ospite']) and row['Gol Ospite'] != "" else 0
         
@@ -150,6 +169,7 @@ if menu == "🏠 Home & Live":
         </div>
         """, unsafe_allow_html=True)
     else:
+        # Se non c'è partita, mostra animazione e messaggio
         col1, col2 = st.columns([1,2])
         with col1:
             if lottie_soccer: st_lottie(lottie_soccer, height=200)
@@ -162,12 +182,16 @@ elif menu == "🏆 Classifica":
     st.title("🏆 Classifica")
     df = carica_dati("Classifica")
     if df is not None:
+        # Filtra righe vuote
         df = df.dropna(subset=['Squadre']) 
+        
+        # Converte tutto in interi
         cols_num = ['Punti', 'PG', 'Vinte', 'GF', 'GS', 'DR', 'Gialli', 'Rossi']
         for c in cols_num:
             if c in df.columns:
                 df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0).astype(int)
         
+        # Ordinamento: Punti > DR > GF > GS > Cartellini
         sort_by = ["Punti", "DR", "GF", "GS"]
         asc = [False, False, False, True]
         if 'Gialli' in df.columns: sort_by.extend(["Gialli", "Rossi"]); asc.extend([True, True])
@@ -182,6 +206,8 @@ elif menu == "🏆 Classifica":
                 "PG": st.column_config.NumberColumn("PG"),
                 "DR": st.column_config.NumberColumn("Diff"),
                 "Vinte": st.column_config.NumberColumn("V"),
+                "Gialli": st.column_config.NumberColumn("🟨"),
+                "Rossi": st.column_config.NumberColumn("🟥")
             },
             use_container_width=True, hide_index=True
         )
@@ -192,18 +218,22 @@ elif menu == "👕 Squadre":
     df_players = carica_dati("Marcatori")
     
     if df_players is not None and 'Squadra' in df_players.columns:
+        # Elimina righe vuote e pulisce i dati
         df_players = df_players.dropna(subset=['Squadra'])
         df_players = df_players[df_players['Squadra'] != '']
         if 'Gol' in df_players.columns:
              df_players['Gol'] = pd.to_numeric(df_players['Gol'], errors='coerce').fillna(0).astype(int)
 
         teams = df_players['Squadra'].unique()
-        cols = st.columns(2)
+        cols = st.columns(2) # Layout a griglia
+        
         for i, team in enumerate(teams):
             with cols[i % 2]:
                 with st.container(border=True):
                     st.subheader(f"🛡️ {team}")
+                    # Mostra tabella pulita
                     roster = df_players[df_players['Squadra'] == team][['Giocatore', 'Gol']]
+                    roster = roster.sort_values(by="Giocatore")
                     st.table(roster.set_index('Giocatore'))
 
 # 4. MARCATORI
@@ -217,6 +247,7 @@ elif menu == "⚽ Marcatori":
         if 'Gol' in df_m.columns:
             df_m['Gol'] = pd.to_numeric(df_m['Gol'], errors='coerce').fillna(0).astype(int)
             
+            # Podio dei primi 3
             top3 = df_m.sort_values(by="Gol", ascending=False).head(3)
             c1, c2, c3 = st.columns(3)
             if len(top3) >= 1: c2.metric("🥇 Top Scorer", top3.iloc[0]['Giocatore'], f"{int(top3.iloc[0]['Gol'])} Gol")
@@ -224,6 +255,8 @@ elif menu == "⚽ Marcatori":
             if len(top3) >= 3: c3.metric("🥉 Terzo", top3.iloc[2]['Giocatore'], f"{int(top3.iloc[2]['Gol'])} Gol")
             
             st.divider()
+            
+            # Lista completa con barra progressi
             st.dataframe(
                 df_m.sort_values(by="Gol", ascending=False),
                 use_container_width=True, hide_index=True,
@@ -236,13 +269,17 @@ elif menu == "📅 Calendario":
     df_cal = carica_dati("Calendario")
     if df_cal is not None:
         df_cal = df_cal.dropna(subset=['Casa', 'Ospite'])
+        
         required = ['Casa', 'Ospite', 'Gol Casa', 'Gol Ospite', 'Ora', 'Stato']
         if all(c in df_cal.columns for c in required):
+            # Loop per creare le CARD (meglio delle tabelle su mobile)
             for index, row in df_cal.iterrows():
+                # Gestione pulita dei numeri
                 gc = int(float(row['Gol Casa'])) if pd.notna(row['Gol Casa']) and row['Gol Casa'] != "" else ""
                 go = int(float(row['Gol Ospite'])) if pd.notna(row['Gol Ospite']) and row['Gol Ospite'] != "" else ""
                 
                 score = f"{gc} - {go}" if gc != "" else "vs"
+                # Bordo Oro se LIVE, Grigio scuro se no
                 border = "#FFD700" if "LIVE" in str(row['Stato']) else "#333"
                 
                 st.markdown(f"""
@@ -258,6 +295,8 @@ elif menu == "📅 Calendario":
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
+        else:
+            st.error("Errore colonne Calendario. Controlla il foglio Google.")
 
 # 6. REGOLAMENTO
 elif menu == "📜 Regolamento":
