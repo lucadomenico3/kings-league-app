@@ -11,7 +11,7 @@ st.set_page_config(
     page_title="Kings Valdagri Cup", 
     layout="wide", 
     page_icon="👑",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded" # Importante: lascia expanded
 )
 
 # -----------------------------------------------------------------------------
@@ -65,7 +65,7 @@ def vai_a(pagina):
     st.session_state.nav_selection = pagina
 
 # -----------------------------------------------------------------------------
-# 4. CSS STILE "CLEAN BLUE" + VISIBILITÀ MENU FORZATA
+# 4. CSS STILE "CLEAN BLUE" + VISIBILITÀ MENU FORZATA (FIXED)
 # -----------------------------------------------------------------------------
 st.markdown("""
 <style>
@@ -83,52 +83,76 @@ st.markdown("""
     /* ============================================================ */
 
     /* 1. HEADER: Lo rendiamo trasparente ma NON invisibile (display: block) */
+    /* Questo è il contenitore principale. Deve esistere per ospitare il bottone */
     header[data-testid="stHeader"] {
-        background-color: #020b1c !important; /* Colore dello sfondo */
+        background: transparent !important;
+        background-color: transparent !important;
         border-bottom: none !important;
-        z-index: 1 !important; /* Stiamo bassi per non coprire il menu */
+        z-index: 1 !important;
     }
 
     /* 2. NASCONDIAMO LA DECORAZIONE COLORATA (La linea arcobaleno in alto) */
     [data-testid="stDecoration"] {
         display: none !important;
+        visibility: hidden !important;
     }
 
     /* 3. NASCONDIAMO I 3 PUNTINI E TOOLBAR A DESTRA */
     [data-testid="stToolbar"] {
         display: none !important;
+        visibility: hidden !important;
     }
 
-    /* 4. FOOTER: VIA TUTTO */
+    /* 4. NASCONDIAMO QUALSIASI SCRITTA NELL'HEADER (tranne il bottone) */
+    header[data-testid="stHeader"] > div:first-child {
+        background: transparent !important;
+    }
+
+    /* 5. FOOTER: VIA TUTTO */
     footer {
         display: none !important;
+        visibility: hidden !important;
     }
     .stDeployButton {
         display: none !important;
-    }
-
-    /* 5. FORZIAMO IL MENU AD APPARIRE */
-    /* Questo è il contenitore del bottone del menu */
-    [data-testid="stSidebarCollapsedControl"] {
-        display: block !important;
-        color: #1E90FF !important;
-        z-index: 999999 !important; /* Altissimo livello, sopra tutto */
+        visibility: hidden !important;
     }
     
-    /* Nascondiamo la freccia originale */
+    /* 6. TOOLBAR TABELLE */
+    [data-testid="stElementToolbar"] {
+        display: none !important;
+    }
+
+    /* ============================================================ */
+    /* 🍔 IL MENU HAMBURGER (LA PARTE CRUCIALE) 🍔 */
+    /* ============================================================ */
+    
+    /* Forziamo il bottone ad essere visibile anche se il resto è nascosto */
+    [data-testid="stSidebarCollapsedControl"] {
+        display: block !important;
+        visibility: visible !important;
+        color: #1E90FF !important; /* Colore Blu Elettrico */
+        z-index: 999999 !important; /* Sopra ogni cosa */
+        background-color: transparent !important;
+    }
+    
+    /* Nascondiamo la freccia originale grigia */
     [data-testid="stSidebarCollapsedControl"] svg {
         display: none !important;
     }
     
-    /* Disegniamo il Menu Hamburger */
+    /* Disegniamo il nostro Menu Hamburger (☰) */
     [data-testid="stSidebarCollapsedControl"]::after {
         content: "☰";
-        font-size: 2.5rem;
-        color: #1E90FF; /* Blu Elettrico */
+        font-size: 2.8rem; /* Grandezza */
+        color: #1E90FF;    /* Blu Elettrico */
         font-weight: bold;
-        padding-left: 5px;
-        margin-top: -5px;
-        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        padding-left: 10px;
+        padding-top: 5px;
+        cursor: pointer;
     }
 
     /* ============================================================ */
