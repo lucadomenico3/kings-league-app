@@ -11,7 +11,7 @@ st.set_page_config(
     page_title="Kings Valdagri Cup", 
     layout="wide", 
     page_icon="👑",
-    initial_sidebar_state="expanded" # Importante: lascia expanded
+    initial_sidebar_state="expanded"
 )
 
 # -----------------------------------------------------------------------------
@@ -65,7 +65,7 @@ def vai_a(pagina):
     st.session_state.nav_selection = pagina
 
 # -----------------------------------------------------------------------------
-# 4. CSS STILE "CLEAN BLUE" + VISIBILITÀ MENU FORZATA (FIXED)
+# 4. CSS STILE "CLEAN BLUE" (Versione Sicura)
 # -----------------------------------------------------------------------------
 st.markdown("""
 <style>
@@ -77,85 +77,29 @@ st.markdown("""
         color: #ffffff;
         font-family: 'Roboto', sans-serif;
     }
-
-    /* ============================================================ */
-    /* 🛠️ FIX MENU & PULIZIA (STRATEGIA CHIRURGICA) 🛠️ */
-    /* ============================================================ */
-
-    /* 1. HEADER: Lo rendiamo trasparente ma NON invisibile (display: block) */
-    /* Questo è il contenitore principale. Deve esistere per ospitare il bottone */
-    header[data-testid="stHeader"] {
-        background: transparent !important;
-        background-color: transparent !important;
-        border-bottom: none !important;
-        z-index: 1 !important;
-    }
-
-    /* 2. NASCONDIAMO LA DECORAZIONE COLORATA (La linea arcobaleno in alto) */
-    [data-testid="stDecoration"] {
-        display: none !important;
-        visibility: hidden !important;
-    }
-
-    /* 3. NASCONDIAMO I 3 PUNTINI E TOOLBAR A DESTRA */
-    [data-testid="stToolbar"] {
-        display: none !important;
-        visibility: hidden !important;
-    }
-
-    /* 4. NASCONDIAMO QUALSIASI SCRITTA NELL'HEADER (tranne il bottone) */
-    header[data-testid="stHeader"] > div:first-child {
-        background: transparent !important;
-    }
-
-    /* 5. FOOTER: VIA TUTTO */
+    
+    /* NASCONDIAMO SOLO IL FOOTER (Sicuro al 100%) */
     footer {
-        display: none !important;
-        visibility: hidden !important;
-    }
-    .stDeployButton {
-        display: none !important;
-        visibility: hidden !important;
+        visibility: hidden;
+        display: none;
     }
     
-    /* 6. TOOLBAR TABELLE */
-    [data-testid="stElementToolbar"] {
-        display: none !important;
+    /* HEADER TRASPARENTE MA PRESENTE (Così il menu funziona) */
+    header {
+        background-color: #020b1c !important;
     }
 
-    /* ============================================================ */
-    /* 🍔 IL MENU HAMBURGER (LA PARTE CRUCIALE) 🍔 */
-    /* ============================================================ */
-    
-    /* Forziamo il bottone ad essere visibile anche se il resto è nascosto */
-    [data-testid="stSidebarCollapsedControl"] {
-        display: block !important;
-        visibility: visible !important;
-        color: #1E90FF !important; /* Colore Blu Elettrico */
-        z-index: 999999 !important; /* Sopra ogni cosa */
-        background-color: transparent !important;
-    }
-    
-    /* Nascondiamo la freccia originale grigia */
+    /* CUSTOM MENU ICON (Semplice) */
     [data-testid="stSidebarCollapsedControl"] svg {
         display: none !important;
     }
-    
-    /* Disegniamo il nostro Menu Hamburger (☰) */
     [data-testid="stSidebarCollapsedControl"]::after {
         content: "☰";
-        font-size: 2.8rem; /* Grandezza */
-        color: #1E90FF;    /* Blu Elettrico */
+        font-size: 2.2rem;
+        color: #1E90FF;
         font-weight: bold;
-        position: absolute;
-        top: 0;
-        left: 0;
-        padding-left: 10px;
-        padding-top: 5px;
-        cursor: pointer;
+        margin-top: -5px;
     }
-
-    /* ============================================================ */
 
     /* TABELLE */
     [data-testid="stDataFrame"], [data-testid="stTable"] {
@@ -178,7 +122,7 @@ st.markdown("""
         50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(30, 144, 255, 0.8); }
         100% { transform: scale(1); box-shadow: 0 0 15px rgba(30, 144, 255, 0.4); }
     }
-
+    
     /* CARD STYLE */
     div.css-card {
         background-color: #0a1930; 
