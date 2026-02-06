@@ -11,7 +11,7 @@ st.set_page_config(
     page_title="Kings Valdagri Cup", 
     layout="wide", 
     page_icon="👑",
-    initial_sidebar_state="collapsed" # Il menu parte chiuso (pulito)
+    initial_sidebar_state="expanded"  # <--- ECCOLO: Il menu parte APERTO
 )
 
 # -----------------------------------------------------------------------------
@@ -65,7 +65,7 @@ def vai_a(pagina):
     st.session_state.nav_selection = pagina
 
 # -----------------------------------------------------------------------------
-# 4. CSS STILE "CLEAN BLUE" (VERSIONE SICURA)
+# 4. CSS STILE "CLEAN BLUE"
 # -----------------------------------------------------------------------------
 st.markdown("""
 <style>
@@ -78,13 +78,13 @@ st.markdown("""
         font-family: 'Roboto', sans-serif;
     }
 
-    /* NASCONDIAMO SOLO IL FOOTER (Questo è sicuro) */
+    /* NASCONDIAMO IL FOOTER */
     footer {
         visibility: hidden;
         display: none;
     }
     
-    /* MANTENIAMO L'HEADER STANDARD MA COLORATO BENE */
+    /* HEADER PULITO */
     header {
         background-color: #020b1c !important;
     }
@@ -168,17 +168,20 @@ lottie_soccer = load_lottieurl("https://assets9.lottiefiles.com/packages/lf20_6Y
 # -----------------------------------------------------------------------------
 with st.sidebar:
     # --- LOGICA VIDEO ---
+    # Controlliamo se è la prima volta che l'utente carica la pagina
     if "intro_played" not in st.session_state:
         st.session_state["intro_played"] = False
 
     if not st.session_state["intro_played"]:
+        # PRIMA VOLTA: Mostra il Video (che parte in autoplay perché il menu è aperto)
         video_html = get_video_html("ruggito.mp4")
         if video_html:
             st.markdown(video_html, unsafe_allow_html=True)
-            st.session_state["intro_played"] = True
+            st.session_state["intro_played"] = True # Segna come visto
         else:
             st.warning("Video non trovato.")
     else:
+        # SECONDA VOLTA IN POI: Mostra il logo statico che pulsa
         try:
             st.image("sfondo.jpeg", use_container_width=True)
             st.markdown("""<style>[data-testid="stSidebar"] img { animation: pulse 3s infinite; }</style>""", unsafe_allow_html=True)
