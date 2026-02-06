@@ -47,13 +47,11 @@ def carica_dati(nome_foglio):
     except:
         return None
 
-# --- NUOVA FUNZIONE: Video HTML senza controlli ---
 def get_video_html(file_path):
     try:
         with open(file_path, "rb") as f:
             video_bytes = f.read()
         video_b64 = base64.b64encode(video_bytes).decode()
-        # HTML magico: autoplay, niente controls, pointer-events:none (non cliccabile)
         return f'''
         <video width="100%" autoplay playsinline style="border-radius: 10px; pointer-events: none;">
             <source src="data:video/mp4;base64,{video_b64}" type="video/mp4">
@@ -64,26 +62,58 @@ def get_video_html(file_path):
         return None
 
 # -----------------------------------------------------------------------------
-# 4. CSS STILE "CLEAN BLUE" + ANIMAZIONE PULSE
+# 4. CSS STILE "CLEAN BLUE" + TABELLE LEGGIBILI
 # -----------------------------------------------------------------------------
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
     
-    /* SFONDO PULITO BLU NOTTE */
+    /* SFONDO */
     .stApp {
         background-color: #020b1c;
         color: #ffffff;
         font-family: 'Roboto', sans-serif;
     }
     
-    /* ANIMAZIONE LOGO SIDEBAR (Solo per l'immagine statica) */
+    /* --- NUOVO STILE TABELLE (HIGH VISIBILITY) --- */
+    
+    /* Intestazione Tabella (Header) */
+    [data-testid="stDataFrame"] th, [data-testid="stTable"] th {
+        background-color: #1E90FF !important; /* Blu Elettrico */
+        color: white !important;
+        font-size: 1.1rem !important; /* Scritta più grande */
+        font-weight: bold !important;
+        text-align: center !important;
+        border-bottom: 2px solid #ffffff !important;
+    }
+    
+    /* Celle della Tabella */
+    [data-testid="stDataFrame"] td, [data-testid="stTable"] td {
+        background-color: #0a1930 !important; /* Sfondo scuro */
+        color: #ffffff !important; /* Testo bianco puro */
+        font-size: 1rem !important; /* Testo più grande (16px) */
+        border-bottom: 1px solid #333 !important; /* Riga separatrice sottile */
+    }
+
+    /* Effetto Zebra (Righe alterne) opzionale per leggibilità */
+    [data-testid="stDataFrame"] tr:nth-of-type(even) td {
+        background-color: #0f2444 !important; /* Leggermente più chiaro */
+    }
+
+    /* Hover (Quando passi il mouse) */
+    [data-testid="stDataFrame"] tr:hover td {
+        background-color: #1E90FF !important;
+        color: white !important;
+        cursor: default;
+    }
+
+    /* ------------------------------------------- */
+
+    /* ANIMAZIONE LOGO SIDEBAR */
     [data-testid="stSidebar"] img {
         border-radius: 10px;
         box-shadow: 0 0 15px rgba(30, 144, 255, 0.4);
     }
-    
-    /* Animazione Pulse definita */
     @keyframes pulse {
         0% { transform: scale(1); box-shadow: 0 0 15px rgba(30, 144, 255, 0.4); }
         50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(30, 144, 255, 0.8); }
@@ -110,14 +140,6 @@ st.markdown("""
         color: #ffffff !important; 
         text-transform: uppercase; 
         text-shadow: 0px 0px 10px rgba(30, 144, 255, 0.5);
-    }
-    
-    /* TABELLE */
-    [data-testid="stDataFrame"], [data-testid="stTable"] {
-        border: 1px solid #1E90FF;
-        border-radius: 10px;
-        overflow: hidden;
-        background-color: #0a1930;
     }
     
     /* SIDEBAR */
@@ -155,33 +177,23 @@ st.markdown("""
 lottie_soccer = load_lottieurl("https://assets9.lottiefiles.com/packages/lf20_6YCRFI.json")
 
 # -----------------------------------------------------------------------------
-# 6. SIDEBAR (NUOVA LOGICA VIDEO HTML)
+# 6. SIDEBAR
 # -----------------------------------------------------------------------------
 with st.sidebar:
-    
-    # Inizializza stato sessione
     if "intro_played" not in st.session_state:
         st.session_state["intro_played"] = False
 
-    # 1. INTRO VIDEO (Solo prima volta)
     if not st.session_state["intro_played"]:
         video_html = get_video_html("ruggito.mp4")
         if video_html:
-            # Inseriamo HTML puro invece del widget st.video
             st.markdown(video_html, unsafe_allow_html=True)
             st.session_state["intro_played"] = True
         else:
             st.warning("Video non trovato.")
-
-    # 2. LOGO STATICO (Dalla seconda volta in poi)
     else:
         try:
             st.image("sfondo.jpeg", use_container_width=True)
-            # Applichiamo l'animazione pulse via CSS (perché Streamlit ricarica l'img)
-            st.markdown(
-                """<style>[data-testid="stSidebar"] img { animation: pulse 3s infinite; }</style>""", 
-                unsafe_allow_html=True
-            )
+            st.markdown("""<style>[data-testid="stSidebar"] img { animation: pulse 3s infinite; }</style>""", unsafe_allow_html=True)
         except:
             st.warning("Logo non trovato")
 
