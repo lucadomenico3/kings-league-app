@@ -61,7 +61,7 @@ def get_video_html(file_path):
     except FileNotFoundError:
         return None
 
-# Funzione per cambiare pagina dai bottoni rapidi
+# --- FUNZIONE CAMBIO PAGINA (CORRETTA PER CALLBACK) ---
 def vai_a(pagina):
     st.session_state.nav_selection = pagina
 
@@ -79,7 +79,7 @@ st.markdown("""
         font-family: 'Roboto', sans-serif;
     }
     
-    /* TABELLE PULITE */
+    /* TABELLE */
     [data-testid="stDataFrame"], [data-testid="stTable"] {
         font-size: 1.1rem !important;
     }
@@ -134,11 +134,11 @@ st.markdown("""
         font-weight: bold;
         border-radius: 15px;
         width: 100%;
-        height: 3em; /* Pulsanti più alti e cliccabili */
+        height: 3em; 
         border: none;
         transition: 0.3s;
         box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        text-transform: uppercase; /* Scritte maiuscole */
+        text-transform: uppercase; 
     }
     div.stButton > button:hover { 
         background-color: #00bfff;
@@ -181,7 +181,7 @@ with st.sidebar:
     st.markdown("<h3 style='text-align: center; margin-top: 0;'>KINGS VALDAGRI</h3>", unsafe_allow_html=True)
     st.markdown("---")
     
-    # MODIFICA IMPORTANTE: Aggiunto key="nav_selection" per collegare i bottoni della Home
+    # KEY FONDAMENTALE PER IL COLLEGAMENTO
     menu = st.radio("NAVIGAZIONE", [
         "🏠 Home & Live", 
         "🏆 Classifica", 
@@ -242,27 +242,21 @@ if menu == "🏠 Home & Live":
             st.markdown("### Nessuna partita in corso.")
             st.write("Consulta il calendario per i prossimi match!")
 
-    # --- NUOVA SEZIONE: BOTTONI DI NAVIGAZIONE RAPIDA ---
+    # --- MENU RAPIDO (FIXED) ---
     st.markdown("---")
     st.markdown("### ⚡ Menu Rapido")
     
-    # 3 Colonne per 3 Bottoni giganti
     col_nav1, col_nav2, col_nav3 = st.columns(3)
     
+    # NOTA: Usiamo 'on_click' e 'args' per evitare l'errore di Streamlit
     with col_nav1:
-        if st.button("🏆 CLASSIFICA"):
-            vai_a("🏆 Classifica")
-            st.rerun()
+        st.button("🏆 CLASSIFICA", on_click=vai_a, args=("🏆 Classifica",))
             
     with col_nav2:
-        if st.button("📅 CALENDARIO"):
-            vai_a("📅 Calendario")
-            st.rerun()
+        st.button("📅 CALENDARIO", on_click=vai_a, args=("📅 Calendario",))
             
     with col_nav3:
-        if st.button("⚽ MARCATORI"):
-            vai_a("⚽ Marcatori")
-            st.rerun()
+        st.button("⚽ MARCATORI", on_click=vai_a, args=("⚽ Marcatori",))
 
 # === 2. CLASSIFICA ===
 elif menu == "🏆 Classifica":
