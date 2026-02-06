@@ -11,7 +11,7 @@ st.set_page_config(
     page_title="Kings Valdagri Cup", 
     layout="wide", 
     page_icon="👑",
-    initial_sidebar_state="collapsed"  # Il menu parte chiuso (così il leone non ruggisce subito)
+    initial_sidebar_state="collapsed" # Il menu parte chiuso
 )
 
 # -----------------------------------------------------------------------------
@@ -65,7 +65,7 @@ def vai_a(pagina):
     st.session_state.nav_selection = pagina
 
 # -----------------------------------------------------------------------------
-# 4. CSS STILE "CLEAN BLUE" + PULSANTE FIXED
+# 4. CSS STILE "CLEAN BLUE" + MENU FIXATO (SAFE MODE)
 # -----------------------------------------------------------------------------
 st.markdown("""
 <style>
@@ -78,39 +78,44 @@ st.markdown("""
         font-family: 'Roboto', sans-serif;
     }
 
-    /* HEADER TRASPARENTE */
+    /* ============================================================ */
+    /* 🛡️ ZONA SICUREZZA MENU 🛡️ */
+    /* ============================================================ */
+
+    /* 1. HEADER: Lo rendiamo trasparente, NON nascosto. 
+       pointer-events: none significa che l'utente clicca "attraverso" l'header 
+       come se non esistesse, MA noi riattiviamo il click sul bottone dopo. */
     header[data-testid="stHeader"] {
-        background-color: transparent !important;
+        background: transparent !important;
         border-bottom: none !important;
+        pointer-events: none !important; 
+        z-index: 100 !important;
     }
 
-    /* NASCONDIAMO ELEMENTI NON NECESSARI */
+    /* 2. NASCONDIAMO GLI ELEMENTI INTERNI DELL'HEADER CHE NON VOGLIAMO */
     [data-testid="stDecoration"] { display: none !important; }
     [data-testid="stToolbar"] { display: none !important; }
-    footer { display: none !important; }
-    .stDeployButton { display: none !important; }
-    [data-testid="stElementToolbar"] { display: none !important; }
-
-    /* --- MENU HAMBURGER (FIXED POSITION) --- */
-    /* Questa è la parte magica: lo fissiamo allo schermo */
     
+    /* 3. IL BOTTONE MENU: LO RENDIAMO "IMMORTALE" */
     [data-testid="stSidebarCollapsedControl"] {
-        position: fixed !important; /* Lo stacchiamo dal flusso */
-        top: 15px !important;
-        left: 15px !important;
-        z-index: 1000000 !important; /* Sopra a tutto, anche all'header */
         display: block !important;
         visibility: visible !important;
+        pointer-events: auto !important; /* RIATTIVIAMO IL CLICK QUI */
         color: #1E90FF !important;
         background-color: transparent !important;
+        
+        /* Lo posizioniamo in modo fisso per essere sicuri */
+        position: fixed !important;
+        top: 15px !important;
+        left: 15px !important;
+        z-index: 999999 !important;
     }
-    
-    /* Nascondiamo la freccia originale */
+
+    /* 4. CAMBIAMO L'ICONA IN HAMBURGER */
     [data-testid="stSidebarCollapsedControl"] svg {
         display: none !important;
     }
     
-    /* Disegniamo l'Hamburger */
     [data-testid="stSidebarCollapsedControl"]::after {
         content: "☰";
         font-size: 2.8rem;
@@ -118,6 +123,13 @@ st.markdown("""
         font-weight: bold;
         display: block;
     }
+
+    /* 5. PULIZIA ALTRI ELEMENTI */
+    footer { display: none !important; }
+    .stDeployButton { display: none !important; }
+    [data-testid="stElementToolbar"] { display: none !important; }
+
+    /* ============================================================ */
 
     /* TABELLE */
     [data-testid="stDataFrame"], [data-testid="stTable"] {
@@ -196,7 +208,7 @@ lottie_soccer = load_lottieurl("https://assets9.lottiefiles.com/packages/lf20_6Y
 # 6. SIDEBAR
 # -----------------------------------------------------------------------------
 with st.sidebar:
-    # VIDEO LOGIC: Parte solo quando apri il menu per la prima volta
+    # VIDEO LOGIC: Parte solo la prima volta
     if "intro_played" not in st.session_state:
         st.session_state["intro_played"] = False
 
