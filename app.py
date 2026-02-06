@@ -61,12 +61,11 @@ def get_video_html(file_path):
     except FileNotFoundError:
         return None
 
-# --- FUNZIONE CAMBIO PAGINA (CORRETTA PER CALLBACK) ---
 def vai_a(pagina):
     st.session_state.nav_selection = pagina
 
 # -----------------------------------------------------------------------------
-# 4. CSS STILE "CLEAN BLUE"
+# 4. CSS STILE "CLEAN BLUE" + PULIZIA TOTALE (KIOSK MODE)
 # -----------------------------------------------------------------------------
 st.markdown("""
 <style>
@@ -78,7 +77,62 @@ st.markdown("""
         color: #ffffff;
         font-family: 'Roboto', sans-serif;
     }
+
+    /* ============================================================ */
+    /* 🛑 ZONA PULIZIA ESTREMA (NASCONDE TUTTO IL BRANDING) 🛑 */
+    /* ============================================================ */
+
+    /* 1. Nasconde la barra in alto a destra (3 puntini, Fork, Deploy, GitHub) */
+    [data-testid="stToolbar"] {
+        visibility: hidden !important;
+        display: none !important;
+    }
+
+    /* 2. Nasconde il Footer in basso (Made with Streamlit) */
+    footer {
+        visibility: hidden !important;
+        display: none !important;
+    }
     
+    /* 3. Nasconde la decorazione colorata in cima alla pagina */
+    header {
+        visibility: hidden !important;
+    }
+
+    /* 4. Nasconde il bottone "Manage App" (se presente in basso a destra) */
+    .stDeployButton {
+        display: none !important;
+    }
+    
+    /* 5. Nasconde i bottoni di zoom/download sopra le tabelle */
+    [data-testid="stElementToolbar"] {
+        display: none !important;
+    }
+
+    /* ============================================================ */
+
+    /* ICONA MENU HAMBURGER (PERSONALIZZATA) */
+    /* Dato che abbiamo nascosto l'header, dobbiamo assicurarci che questo rimanga visibile */
+    [data-testid="stSidebarCollapsedControl"] {
+        z-index: 999999 !important; /* Forza in primo piano */
+        visibility: visible !important;
+        display: block !important;
+    }
+    
+    [data-testid="stSidebarCollapsedControl"] svg {
+        display: none !important; /* Nasconde la freccia originale */
+    }
+    
+    [data-testid="stSidebarCollapsedControl"]::after {
+        content: "☰";
+        font-size: 2.5rem;
+        color: #1E90FF;
+        font-weight: bold;
+        padding-left: 5px;
+        margin-top: -10px;
+        display: block;
+    }
+
     /* TABELLE */
     [data-testid="stDataFrame"], [data-testid="stTable"] {
         font-size: 1.1rem !important;
@@ -100,11 +154,6 @@ st.markdown("""
         50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(30, 144, 255, 0.8); }
         100% { transform: scale(1); box-shadow: 0 0 15px rgba(30, 144, 255, 0.4); }
     }
-    
-    /* INTERFACCIA */
-    footer {visibility: hidden; display: none !important;}
-    [data-testid="stElementToolbar"] {display: none !important;}
-    header {background-color: #020b1c !important;}
 
     /* CARD STYLE */
     div.css-card {
@@ -181,7 +230,6 @@ with st.sidebar:
     st.markdown("<h3 style='text-align: center; margin-top: 0;'>KINGS VALDAGRI</h3>", unsafe_allow_html=True)
     st.markdown("---")
     
-    # KEY FONDAMENTALE PER IL COLLEGAMENTO
     menu = st.radio("NAVIGAZIONE", [
         "🏠 Home & Live", 
         "🏆 Classifica", 
@@ -242,13 +290,12 @@ if menu == "🏠 Home & Live":
             st.markdown("### Nessuna partita in corso.")
             st.write("Consulta il calendario per i prossimi match!")
 
-    # --- MENU RAPIDO (FIXED) ---
+    # --- MENU RAPIDO ---
     st.markdown("---")
     st.markdown("### ⚡ Menu Rapido")
     
     col_nav1, col_nav2, col_nav3 = st.columns(3)
     
-    # NOTA: Usiamo 'on_click' e 'args' per evitare l'errore di Streamlit
     with col_nav1:
         st.button("🏆 CLASSIFICA", on_click=vai_a, args=("🏆 Classifica",))
             
