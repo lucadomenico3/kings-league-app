@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # -----------------------------------------------------------------------------
-# 2. TENTATIVO DI FORZARE L'ICONA HOME SCREEN
+# 2. ICONA HOME SCREEN
 # -----------------------------------------------------------------------------
 icon_url = "https://cdn-icons-png.flaticon.com/512/2545/2545603.png"
 st.markdown(f"""
@@ -47,7 +47,7 @@ def carica_dati(nome_foglio):
         return None
 
 # -----------------------------------------------------------------------------
-# 4. CSS STILE "CLEAN BLUE" (Sfondo Tinta Unita)
+# 4. CSS STILE "CLEAN BLUE" + ANIMAZIONE PULSE ⚡
 # -----------------------------------------------------------------------------
 st.markdown("""
 <style>
@@ -55,9 +55,22 @@ st.markdown("""
     
     /* SFONDO PULITO BLU NOTTE */
     .stApp {
-        background-color: #020b1c; /* Colore solido scuro */
+        background-color: #020b1c;
         color: #ffffff;
         font-family: 'Roboto', sans-serif;
+    }
+    
+    /* ANIMAZIONE LOGO SIDEBAR (Nuovo!) */
+    [data-testid="stSidebar"] img {
+        animation: pulse 3s infinite;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(30, 144, 255, 0.4); /* Alone blu di base */
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); box-shadow: 0 0 15px rgba(30, 144, 255, 0.4); }
+        50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(30, 144, 255, 0.8); } /* Si ingrandisce e illumina */
+        100% { transform: scale(1); box-shadow: 0 0 15px rgba(30, 144, 255, 0.4); }
     }
     
     /* PULIZIA INTERFACCIA */
@@ -65,17 +78,17 @@ st.markdown("""
     [data-testid="stElementToolbar"] {display: none !important;}
     header {background-color: #020b1c !important;}
 
-    /* CARD: BLU SCURO CON BORDO AZZURRO */
+    /* CARD STYLE */
     div.css-card {
         background-color: #0a1930; 
-        border: 1px solid #1E90FF; /* Blu Elettrico */
+        border: 1px solid #1E90FF;
         border-radius: 15px;
         padding: 20px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         margin-bottom: 20px;
     }
 
-    /* TITOLI: BIANCO PURO */
+    /* TYPOGRAPHY */
     h1, h2, h3 { 
         color: #ffffff !important; 
         text-transform: uppercase; 
@@ -112,10 +125,8 @@ st.markdown("""
         transform: scale(1.02);
     }
     
-    /* TESTI SECONDARI */
     p, label, span { color: #e0e0e0 !important; }
 
-    /* LIVE SCORE */
     .live-score { font-size: 3rem; font-weight: bold; text-align: center; color: #fff; text-shadow: 0 0 10px #1E90FF; }
     .live-team { font-size: 1.2rem; color: #b0c4de; text-align: center; }
 </style>
@@ -127,11 +138,10 @@ st.markdown("""
 lottie_soccer = load_lottieurl("https://assets9.lottiefiles.com/packages/lf20_6YCRFI.json")
 
 # -----------------------------------------------------------------------------
-# 6. SIDEBAR (Con LOGO DEL LEONE)
+# 6. SIDEBAR
 # -----------------------------------------------------------------------------
 with st.sidebar:
-    # 🦁 QUI CARICHIAMO IL TUO LOGO
-    # Assicurati che il file si chiami 'sfondo.jpeg' e sia su GitHub
+    # IL LOGO CHE RESPIRA 🦁
     try:
         st.image("sfondo.jpeg", use_container_width=True)
     except:
@@ -162,7 +172,6 @@ with st.sidebar:
 if menu == "🏠 Home & Live":
     st.title("🏟️ Match Center")
     
-    # News
     df_cronaca = carica_dati("Cronaca")
     if df_cronaca is not None and not df_cronaca.empty:
         df_cronaca = df_cronaca.dropna(subset=['Evento'])
@@ -170,7 +179,6 @@ if menu == "🏠 Home & Live":
             ultimo = df_cronaca.iloc[-1]
             st.info(f"📢 **ULTIM'ORA {ultimo['Ora']}:** {ultimo['Evento']}")
     
-    # Match Live
     df_cal = carica_dati("Calendario")
     match_live = None
     if df_cal is not None and 'Stato' in df_cal.columns:
@@ -245,7 +253,6 @@ elif menu == "👕 Squadre":
         df_clean = df_stemmi.dropna(subset=['Squadre', 'Stemma'])
         map_loghi = dict(zip(df_clean['Squadre'], df_clean['Stemma']))
     
-    # URL SCUDO DEFAULT (Versione BLU)
     URL_DEFAULT = "https://cdn-icons-png.flaticon.com/512/10613/10613919.png"
 
     if df_players is not None and 'Squadra' in df_players.columns:
