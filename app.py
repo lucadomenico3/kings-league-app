@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import requests
 from streamlit_lottie import st_lottie
+import base64
 
 # -----------------------------------------------------------------------------
 # 1. CONFIGURAZIONE PAGINA
@@ -46,6 +47,22 @@ def carica_dati(nome_foglio):
     except:
         return None
 
+# --- NUOVA FUNZIONE: Video HTML senza controlli ---
+def get_video_html(file_path):
+    try:
+        with open(file_path, "rb") as f:
+            video_bytes = f.read()
+        video_b64 = base64.b64encode(video_bytes).decode()
+        # HTML magico: autoplay, niente controls, pointer-events:none (non cliccabile)
+        return f'''
+        <video width="100%" autoplay playsinline style="border-radius: 10px; pointer-events: none;">
+            <source src="data:video/mp4;base64,{video_b64}" type="video/mp4">
+            Il tuo browser non supporta il video.
+        </video>
+        '''
+    except FileNotFoundError:
+        return None
+
 # -----------------------------------------------------------------------------
 # 4. CSS STILE "CLEAN BLUE" + ANIMAZIONE PULSE
 # -----------------------------------------------------------------------------
@@ -61,17 +78,12 @@ st.markdown("""
     }
     
     /* ANIMAZIONE LOGO SIDEBAR (Solo per l'immagine statica) */
-    /* Nota: Il video non pulserà, solo il logo statico dopo */
     [data-testid="stSidebar"] img {
         border-radius: 10px;
         box-shadow: 0 0 15px rgba(30, 144, 255, 0.4);
     }
     
-    /* Classe specifica per far pulsare solo l'immagine statica */
-    .pulsing-logo {
-        animation: pulse 3s infinite;
-    }
-
+    /* Animazione Pulse definita */
     @keyframes pulse {
         0% { transform: scale(1); box-shadow: 0 0 15px rgba(30, 144, 255, 0.4); }
         50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(30, 144, 255, 0.8); }
@@ -143,32 +155,26 @@ st.markdown("""
 lottie_soccer = load_lottieurl("https://assets9.lottiefiles.com/packages/lf20_6YCRFI.json")
 
 # -----------------------------------------------------------------------------
-# 6. SIDEBAR (LOGICA VIDEO INTRO vs LOGO STATICO)
+# 6. SIDEBAR (NUOVA LOGICA VIDEO HTML)
 # -----------------------------------------------------------------------------
 with st.sidebar:
     
-    # Inizializziamo lo stato della sessione se non esiste
+    # Inizializza stato sessione
     if "intro_played" not in st.session_state:
         st.session_state["intro_played"] = False
 
-    # LOGICA:
-    # Se è la prima volta (intro_played è False) -> Mostra Video
-    # Altrimenti -> Mostra Immagine Statica
-    
+    # 1. INTRO VIDEO (Solo prima volta)
     if not st.session_state["intro_played"]:
-        try:
-            # Mostra il video
-            st.video("ruggito.mp4", autoplay=True, loop=False)
-            
-            # Segna che l'intro è stata mostrata.
-            # Nota: La prossima volta che l'utente clicca qualcosa, la pagina si ricarica
-            # e passerà all'else (immagine statica).
-            st.session_state["intro_played"] = True 
-        except:
-            st.warning("Video non trovato: ruggito.mp4")
-            
+        video_html = get_video_html("ruggito.mp4")
+        if video_html:
+            # Inseriamo HTML puro invece del widget st.video
+            st.markdown(video_html, unsafe_allow_html=True)
+            st.session_state["intro_played"] = True
+        else:
+            st.warning("Video non trovato.")
+
+    # 2. LOGO STATICO (Dalla seconda volta in poi)
     else:
-        # È già passato l'intro, mostriamo il logo statico che pulsa
         try:
             st.image("sfondo.jpeg", use_container_width=True)
             # Applichiamo l'animazione pulse via CSS (perché Streamlit ricarica l'img)
