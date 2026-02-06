@@ -11,7 +11,7 @@ st.set_page_config(
     page_title="Kings Valdagri Cup", 
     layout="wide", 
     page_icon="👑",
-    initial_sidebar_state="collapsed" # Il menu parte chiuso
+    initial_sidebar_state="collapsed" # Il menu parte chiuso (pulito)
 )
 
 # -----------------------------------------------------------------------------
@@ -65,71 +65,29 @@ def vai_a(pagina):
     st.session_state.nav_selection = pagina
 
 # -----------------------------------------------------------------------------
-# 4. CSS STILE "CLEAN BLUE" + MENU FIXATO (SAFE MODE)
+# 4. CSS STILE "CLEAN BLUE" (VERSIONE SICURA)
 # -----------------------------------------------------------------------------
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
     
-    /* SFONDO */
+    /* SFONDO APP */
     .stApp {
         background-color: #020b1c;
         color: #ffffff;
         font-family: 'Roboto', sans-serif;
     }
 
-    /* ============================================================ */
-    /* 🛡️ ZONA SICUREZZA MENU 🛡️ */
-    /* ============================================================ */
-
-    /* 1. HEADER: Lo rendiamo trasparente, NON nascosto. 
-       pointer-events: none significa che l'utente clicca "attraverso" l'header 
-       come se non esistesse, MA noi riattiviamo il click sul bottone dopo. */
-    header[data-testid="stHeader"] {
-        background: transparent !important;
-        border-bottom: none !important;
-        pointer-events: none !important; 
-        z-index: 100 !important;
-    }
-
-    /* 2. NASCONDIAMO GLI ELEMENTI INTERNI DELL'HEADER CHE NON VOGLIAMO */
-    [data-testid="stDecoration"] { display: none !important; }
-    [data-testid="stToolbar"] { display: none !important; }
-    
-    /* 3. IL BOTTONE MENU: LO RENDIAMO "IMMORTALE" */
-    [data-testid="stSidebarCollapsedControl"] {
-        display: block !important;
-        visibility: visible !important;
-        pointer-events: auto !important; /* RIATTIVIAMO IL CLICK QUI */
-        color: #1E90FF !important;
-        background-color: transparent !important;
-        
-        /* Lo posizioniamo in modo fisso per essere sicuri */
-        position: fixed !important;
-        top: 15px !important;
-        left: 15px !important;
-        z-index: 999999 !important;
-    }
-
-    /* 4. CAMBIAMO L'ICONA IN HAMBURGER */
-    [data-testid="stSidebarCollapsedControl"] svg {
-        display: none !important;
+    /* NASCONDIAMO SOLO IL FOOTER (Questo è sicuro) */
+    footer {
+        visibility: hidden;
+        display: none;
     }
     
-    [data-testid="stSidebarCollapsedControl"]::after {
-        content: "☰";
-        font-size: 2.8rem;
-        color: #1E90FF;
-        font-weight: bold;
-        display: block;
+    /* MANTENIAMO L'HEADER STANDARD MA COLORATO BENE */
+    header {
+        background-color: #020b1c !important;
     }
-
-    /* 5. PULIZIA ALTRI ELEMENTI */
-    footer { display: none !important; }
-    .stDeployButton { display: none !important; }
-    [data-testid="stElementToolbar"] { display: none !important; }
-
-    /* ============================================================ */
 
     /* TABELLE */
     [data-testid="stDataFrame"], [data-testid="stTable"] {
@@ -152,7 +110,7 @@ st.markdown("""
         50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(30, 144, 255, 0.8); }
         100% { transform: scale(1); box-shadow: 0 0 15px rgba(30, 144, 255, 0.4); }
     }
-
+    
     /* CARD STYLE */
     div.css-card {
         background-color: #0a1930; 
@@ -169,12 +127,13 @@ st.markdown("""
         text-shadow: 0px 0px 10px rgba(30, 144, 255, 0.5);
     }
     
+    /* SIDEBAR */
     [data-testid="stSidebar"] { 
         background-color: #00040a; 
         border-right: 1px solid #1E90FF; 
     }
     
-    /* PULSANTI STILE PRO */
+    /* PULSANTI */
     div.stButton > button {
         background-color: #1E90FF;
         color: white;
@@ -208,7 +167,7 @@ lottie_soccer = load_lottieurl("https://assets9.lottiefiles.com/packages/lf20_6Y
 # 6. SIDEBAR
 # -----------------------------------------------------------------------------
 with st.sidebar:
-    # VIDEO LOGIC: Parte solo la prima volta
+    # --- LOGICA VIDEO ---
     if "intro_played" not in st.session_state:
         st.session_state["intro_played"] = False
 
