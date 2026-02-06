@@ -52,6 +52,7 @@ def get_video_html(file_path):
         with open(file_path, "rb") as f:
             video_bytes = f.read()
         video_b64 = base64.b64encode(video_bytes).decode()
+        # HTML magico: autoplay, niente controls, non cliccabile
         return f'''
         <video width="100%" autoplay playsinline style="border-radius: 10px; pointer-events: none;">
             <source src="data:video/mp4;base64,{video_b64}" type="video/mp4">
@@ -62,11 +63,11 @@ def get_video_html(file_path):
         return None
 
 # -----------------------------------------------------------------------------
-# 4. CSS STILE "CLEAN BLUE" + TABELLE LEGGIBILI
+# 4. CSS STILE "CLEAN BLUE" (RITORNO AL CLASSICO)
 # -----------------------------------------------------------------------------
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
     
     /* SFONDO */
     .stApp {
@@ -75,39 +76,19 @@ st.markdown("""
         font-family: 'Roboto', sans-serif;
     }
     
-    /* --- NUOVO STILE TABELLE (HIGH VISIBILITY) --- */
+    /* TABELLE PIÙ CHIARE E FISSE */
+    /* Aumentiamo la dimensione del font nelle tabelle per chiarezza */
+    [data-testid="stDataFrame"], [data-testid="stTable"] {
+        font-size: 1.1rem !important;
+    }
     
-    /* Intestazione Tabella (Header) */
+    /* Intestazioni tabelle più leggibili ma eleganti */
     [data-testid="stDataFrame"] th, [data-testid="stTable"] th {
-        background-color: #1E90FF !important; /* Blu Elettrico */
-        color: white !important;
-        font-size: 1.1rem !important; /* Scritta più grande */
+        color: #1E90FF !important; /* Blu elettrico per i titoli */
         font-weight: bold !important;
-        text-align: center !important;
-        border-bottom: 2px solid #ffffff !important;
+        font-size: 1.1rem !important;
+        border-bottom: 1px solid #333 !important;
     }
-    
-    /* Celle della Tabella */
-    [data-testid="stDataFrame"] td, [data-testid="stTable"] td {
-        background-color: #0a1930 !important; /* Sfondo scuro */
-        color: #ffffff !important; /* Testo bianco puro */
-        font-size: 1rem !important; /* Testo più grande (16px) */
-        border-bottom: 1px solid #333 !important; /* Riga separatrice sottile */
-    }
-
-    /* Effetto Zebra (Righe alterne) opzionale per leggibilità */
-    [data-testid="stDataFrame"] tr:nth-of-type(even) td {
-        background-color: #0f2444 !important; /* Leggermente più chiaro */
-    }
-
-    /* Hover (Quando passi il mouse) */
-    [data-testid="stDataFrame"] tr:hover td {
-        background-color: #1E90FF !important;
-        color: white !important;
-        cursor: default;
-    }
-
-    /* ------------------------------------------- */
 
     /* ANIMAZIONE LOGO SIDEBAR */
     [data-testid="stSidebar"] img {
@@ -277,6 +258,7 @@ elif menu == "🏆 Classifica":
 
         df_ord = df.sort_values(by=sort_by, ascending=asc).reset_index(drop=True)
         
+        # Qui usiamo st.dataframe per poter ordinare, ma senza fronzoli
         st.dataframe(
             df_ord,
             column_config={
@@ -288,7 +270,8 @@ elif menu == "🏆 Classifica":
                 "Gialli": st.column_config.NumberColumn("🟨"),
                 "Rossi": st.column_config.NumberColumn("🟥")
             },
-            use_container_width=True, hide_index=True
+            use_container_width=True, 
+            hide_index=True
         )
 
 # === 3. SQUADRE ===
@@ -328,6 +311,9 @@ elif menu == "👕 Squadre":
                     st.divider()
                     roster = df_players[df_players['Squadra'] == team][['Giocatore', 'Gol']]
                     roster = roster.sort_values(by="Giocatore")
+                    
+                    # QUI LA MODIFICA: Uso st.table invece di st.dataframe
+                    # st.table crea una tabella statica, non ridimensionabile, molto pulita
                     st.table(roster.set_index('Giocatore'))
 
 # === 4. MARCATORI ===
