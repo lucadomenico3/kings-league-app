@@ -65,7 +65,7 @@ def vai_a(pagina):
     st.session_state.nav_selection = pagina
 
 # -----------------------------------------------------------------------------
-# 4. CSS STILE "CLEAN BLUE" + KIOSK MODE (FIXED MENU)
+# 4. CSS STILE "CLEAN BLUE" + VISIBILITÀ MENU FORZATA
 # -----------------------------------------------------------------------------
 st.markdown("""
 <style>
@@ -79,59 +79,59 @@ st.markdown("""
     }
 
     /* ============================================================ */
-    /* 🛑 KIOSK MODE: PULIZIA TOTALE MA MENU SALVO 🛑 */
+    /* 🛠️ FIX MENU & PULIZIA (STRATEGIA CHIRURGICA) 🛠️ */
     /* ============================================================ */
 
-    /* 1. Header: Non lo nascondiamo, ma lo coloriamo come lo sfondo! */
+    /* 1. HEADER: Lo rendiamo trasparente ma NON invisibile (display: block) */
     header[data-testid="stHeader"] {
-        background-color: #020b1c !important;
+        background-color: #020b1c !important; /* Colore dello sfondo */
         border-bottom: none !important;
+        z-index: 1 !important; /* Stiamo bassi per non coprire il menu */
     }
-    
-    /* 2. Nasconde SOLO la toolbar a destra (3 puntini, github, fork) */
+
+    /* 2. NASCONDIAMO LA DECORAZIONE COLORATA (La linea arcobaleno in alto) */
+    [data-testid="stDecoration"] {
+        display: none !important;
+    }
+
+    /* 3. NASCONDIAMO I 3 PUNTINI E TOOLBAR A DESTRA */
     [data-testid="stToolbar"] {
         display: none !important;
-        visibility: hidden !important;
     }
 
-    /* 3. Nasconde la decorazione colorata in alto (se presente) */
-    header > div:first-child {
-        background: transparent !important;
-    }
-
-    /* 4. Nasconde il Footer in basso */
+    /* 4. FOOTER: VIA TUTTO */
     footer {
         display: none !important;
     }
-    
-    /* 5. Nasconde bottone Deploy */
     .stDeployButton {
         display: none !important;
     }
+
+    /* 5. FORZIAMO IL MENU AD APPARIRE */
+    /* Questo è il contenitore del bottone del menu */
+    [data-testid="stSidebarCollapsedControl"] {
+        display: block !important;
+        color: #1E90FF !important;
+        z-index: 999999 !important; /* Altissimo livello, sopra tutto */
+    }
     
-    /* 6. Nasconde toolbar tabelle */
-    [data-testid="stElementToolbar"] {
+    /* Nascondiamo la freccia originale */
+    [data-testid="stSidebarCollapsedControl"] svg {
         display: none !important;
     }
-
-    /* ============================================================ */
-
-    /* ICONA MENU HAMBURGER (PERSONALIZZATA) */
-    /* Ora che l'header c'è, possiamo stilizzare il bottone */
     
-    [data-testid="stSidebarCollapsedControl"] svg {
-        display: none !important; /* Via le freccette originali */
-    }
-    
+    /* Disegniamo il Menu Hamburger */
     [data-testid="stSidebarCollapsedControl"]::after {
         content: "☰";
         font-size: 2.5rem;
-        color: #1E90FF; /* Blu Elettrico ben visibile */
+        color: #1E90FF; /* Blu Elettrico */
         font-weight: bold;
         padding-left: 5px;
         margin-top: -5px;
         display: block;
     }
+
+    /* ============================================================ */
 
     /* TABELLE */
     [data-testid="stDataFrame"], [data-testid="stTable"] {
