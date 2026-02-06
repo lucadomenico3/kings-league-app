@@ -62,7 +62,7 @@ def carica_dati(nome_foglio):
 # -----------------------------------------------------------------------------
 
 # >>> CAMBIA QUI IL NOME DEL TUO FILE IMMAGINE <<<
-image_filename = "sfondo.jpg" 
+image_filename = "sfondo.jpeg" 
 bin_str = get_base64_of_bin_file(image_filename)
 
 # Crea la regola CSS per lo sfondo
