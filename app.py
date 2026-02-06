@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import requests
 from streamlit_lottie import st_lottie
+import base64
 
 # -----------------------------------------------------------------------------
 # 1. CONFIGURAZIONE PAGINA
@@ -14,8 +15,20 @@ st.set_page_config(
 )
 
 # -----------------------------------------------------------------------------
-# 2. TENTATIVO DI FORZARE L'ICONA (Codice Invariato)
+# 2. FUNZIONE PER CODIFICARE L'IMMAGINE DI SFONDO
 # -----------------------------------------------------------------------------
+def get_base64_of_bin_file(bin_file):
+    """
+    Legge un file binario (come un'immagine) e lo restituisce codificato in base64.
+    """
+    try:
+        with open(bin_file, 'rb') as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    except FileNotFoundError:
+        return None
+
+# --- TENTATIVO DI FORZARE L'ICONA (Codice Invariato) ---
 icon_url = "https://cdn-icons-png.flaticon.com/512/2545/2545603.png"
 st.markdown(f"""
     <head>
@@ -25,9 +38,7 @@ st.markdown(f"""
     </head>
     """, unsafe_allow_html=True)
 
-# -----------------------------------------------------------------------------
-# 3. FUNZIONI UTILI
-# -----------------------------------------------------------------------------
+# --- FUNZIONI UTILI ---
 def load_lottieurl(url):
     try:
         r = requests.get(url)
@@ -47,15 +58,43 @@ def carica_dati(nome_foglio):
         return None
 
 # -----------------------------------------------------------------------------
-# 4. CSS STILE "BLUE EDITION" (Nuovo!)
+# 3. CSS CON SFONDO PERSONALIZZATO
 # -----------------------------------------------------------------------------
+
+# >>> CAMBIA QUI IL NOME DEL TUO FILE IMMAGINE <<<
+image_filename = "sfondo.jpg" 
+bin_str = get_base64_of_bin_file(image_filename)
+
+# Crea la regola CSS per lo sfondo
+if bin_str:
+    page_bg_img = f"""
+    <style>
+    .stApp {{
+        background-image: url("data:image/jpg;base64,{bin_str}");
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }}
+    </style>
+    """
+else:
+    # Fallback nel caso l'immagine non venga trovata
+    page_bg_img = """
+    <style>
+    .stApp {
+        background-color: #020b1c; /* Blu notte di default */
+    }
+    </style>
+    """
+
+# Applica il CSS per lo sfondo e tutto il resto dello stile "Blue Edition"
+st.markdown(page_bg_img, unsafe_allow_html=True)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;700&display=swap');
     
-    /* SFONDO BLU NOTTE E TESTO BIANCO */
+    /* FONT GENERALE */
     .stApp {
-        background-color: #020b1c; /* Blu molto scuro */
         color: #ffffff;
         font-family: 'Roboto', sans-serif;
     }
@@ -63,12 +102,12 @@ st.markdown("""
     /* PULIZIA INTERFACCIA */
     footer {visibility: hidden; display: none !important;}
     [data-testid="stElementToolbar"] {display: none !important;}
-    header {background-color: #020b1c !important;}
+    header {background-color: rgba(0,0,0,0) !important;} /* Header trasparente */
 
-    /* CARD: BLU SCURO CON BORDO AZZURRO */
+    /* CARD: BLU SCURO SEMI-TRASPARENTE CON BORDO AZZURRO */
     div.css-card {
-        background-color: #0a1930; /* Blu leggermente più chiaro dello sfondo */
-        border: 1px solid #1E90FF; /* Blu Elettrico */
+        background-color: rgba(10, 25, 48, 0.85); /* Semi-trasparente */
+        border: 1px solid #1E90FF;
         border-radius: 15px;
         padding: 20px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.5);
@@ -79,26 +118,26 @@ st.markdown("""
     h1, h2, h3 { 
         color: #ffffff !important; 
         text-transform: uppercase; 
-        text-shadow: 0px 0px 10px rgba(30, 144, 255, 0.5); /* Leggero alone blu */
+        text-shadow: 0px 0px 10px rgba(30, 144, 255, 0.8);
     }
     
-    /* TABELLE */
+    /* TABELLE: SEMI-TRASPARENTI */
     [data-testid="stDataFrame"], [data-testid="stTable"] {
         border: 1px solid #1E90FF;
         border-radius: 10px;
         overflow: hidden;
-        background-color: #0a1930;
+        background-color: rgba(10, 25, 48, 0.85) !important; /* Semi-trasparente */
     }
     
-    /* SIDEBAR: NERO/BLU PROFONDO */
+    /* SIDEBAR: SEMI-TRASPARENTE */
     [data-testid="stSidebar"] { 
-        background-color: #00040a; 
+        background-color: rgba(0, 4, 10, 0.9) !important; 
         border-right: 1px solid #1E90FF; 
     }
     
-    /* PULSANTI: AZZURRI CON TESTO BIANCO */
+    /* PULSANTI */
     div.stButton > button {
-        background-color: #1E90FF; /* Dodger Blue */
+        background-color: #1E90FF;
         color: white;
         font-weight: bold;
         border-radius: 20px;
@@ -108,29 +147,27 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
     div.stButton > button:hover { 
-        background-color: #00bfff; /* Deep Sky Blue al passaggio del mouse */
+        background-color: #00bfff;
         transform: scale(1.02);
     }
     
     /* SCRITTE SECONDARIE */
-    p, label, span {
-        color: #e0e0e0 !important; /* Bianco sporco per leggere meglio */
-    }
+    p, label, span { color: #e0e0e0 !important; }
 
     /* LIVE SCORE */
     .live-score { font-size: 3rem; font-weight: bold; text-align: center; color: #fff; text-shadow: 0 0 10px #1E90FF; }
-    .live-team { font-size: 1.2rem; color: #b0c4de; text-align: center; } /* LightSteelBlue */
+    .live-team { font-size: 1.2rem; color: #b0c4de; text-align: center; }
 </style>
 """, unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------------
-# 5. CARICAMENTO ASSETS
+# 4. CARICAMENTO ASSETS
 # -----------------------------------------------------------------------------
 lottie_cup = load_lottieurl("https://assets5.lottiefiles.com/packages/lf20_touohxv0.json")
 lottie_soccer = load_lottieurl("https://assets9.lottiefiles.com/packages/lf20_6YCRFI.json")
 
 # -----------------------------------------------------------------------------
-# 6. SIDEBAR
+# 5. SIDEBAR
 # -----------------------------------------------------------------------------
 with st.sidebar:
     if lottie_cup: st_lottie(lottie_cup, height=150, key="cup")
@@ -152,7 +189,7 @@ with st.sidebar:
     st.link_button("📸 Instagram", "https://www.instagram.com/kings_valdagri_cup/", type="primary")
 
 # -----------------------------------------------------------------------------
-# 7. LOGICA PAGINE
+# 6. LOGICA PAGINE
 # -----------------------------------------------------------------------------
 
 # === 1. HOME & LIVE ===
@@ -165,7 +202,7 @@ if menu == "🏠 Home & Live":
         df_cronaca = df_cronaca.dropna(subset=['Evento'])
         if not df_cronaca.empty:
             ultimo = df_cronaca.iloc[-1]
-            st.info(f"📢 **ULTIM'ORA {ultimo['Ora']}:** {ultimo['Evento']}") # Uso .info che è blu di default
+            st.info(f"📢 **ULTIM'ORA {ultimo['Ora']}:** {ultimo['Evento']}")
     
     # Match Live
     df_cal = carica_dati("Calendario")
@@ -309,11 +346,10 @@ elif menu == "📅 Calendario":
                 go = int(float(row['Gol Ospite'])) if pd.notna(row['Gol Ospite']) and row['Gol Ospite'] != "" else ""
                 score = f"{gc} - {go}" if gc != "" else "vs"
                 
-                # Bordo Blu Elettrico se LIVE
                 border = "#1E90FF" if "LIVE" in str(row['Stato']) else "#333"
                 
                 st.markdown(f"""
-                <div style="background-color: #0a1930; border: 1px solid {border}; border-radius: 10px; padding: 15px; margin-bottom: 10px;">
+                <div style="background-color: rgba(10, 25, 48, 0.85); border: 1px solid {border}; border-radius: 10px; padding: 15px; margin-bottom: 10px;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span style="font-weight:bold; color:#b0c4de;">{row['Ora']}</span>
                         <span style="font-size:0.8em; background-color:#333; padding:2px 8px; border-radius:5px; color: white;">{row['Stato']}</span>
