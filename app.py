@@ -65,7 +65,7 @@ def vai_a(pagina):
     st.session_state.nav_selection = pagina
 
 # -----------------------------------------------------------------------------
-# 4. CSS STILE "CLEAN BLUE" + PULIZIA TOTALE (KIOSK MODE)
+# 4. CSS STILE "CLEAN BLUE" + KIOSK MODE (FIXED MENU)
 # -----------------------------------------------------------------------------
 st.markdown("""
 <style>
@@ -79,32 +79,37 @@ st.markdown("""
     }
 
     /* ============================================================ */
-    /* 🛑 ZONA PULIZIA ESTREMA (NASCONDE TUTTO IL BRANDING) 🛑 */
+    /* 🛑 KIOSK MODE: PULIZIA TOTALE MA MENU SALVO 🛑 */
     /* ============================================================ */
 
-    /* 1. Nasconde la barra in alto a destra (3 puntini, Fork, Deploy, GitHub) */
+    /* 1. Header: Non lo nascondiamo, ma lo coloriamo come lo sfondo! */
+    header[data-testid="stHeader"] {
+        background-color: #020b1c !important;
+        border-bottom: none !important;
+    }
+    
+    /* 2. Nasconde SOLO la toolbar a destra (3 puntini, github, fork) */
     [data-testid="stToolbar"] {
-        visibility: hidden !important;
         display: none !important;
+        visibility: hidden !important;
     }
 
-    /* 2. Nasconde il Footer in basso (Made with Streamlit) */
+    /* 3. Nasconde la decorazione colorata in alto (se presente) */
+    header > div:first-child {
+        background: transparent !important;
+    }
+
+    /* 4. Nasconde il Footer in basso */
     footer {
-        visibility: hidden !important;
         display: none !important;
     }
     
-    /* 3. Nasconde la decorazione colorata in cima alla pagina */
-    header {
-        visibility: hidden !important;
-    }
-
-    /* 4. Nasconde il bottone "Manage App" (se presente in basso a destra) */
+    /* 5. Nasconde bottone Deploy */
     .stDeployButton {
         display: none !important;
     }
     
-    /* 5. Nasconde i bottoni di zoom/download sopra le tabelle */
+    /* 6. Nasconde toolbar tabelle */
     [data-testid="stElementToolbar"] {
         display: none !important;
     }
@@ -112,24 +117,19 @@ st.markdown("""
     /* ============================================================ */
 
     /* ICONA MENU HAMBURGER (PERSONALIZZATA) */
-    /* Dato che abbiamo nascosto l'header, dobbiamo assicurarci che questo rimanga visibile */
-    [data-testid="stSidebarCollapsedControl"] {
-        z-index: 999999 !important; /* Forza in primo piano */
-        visibility: visible !important;
-        display: block !important;
-    }
+    /* Ora che l'header c'è, possiamo stilizzare il bottone */
     
     [data-testid="stSidebarCollapsedControl"] svg {
-        display: none !important; /* Nasconde la freccia originale */
+        display: none !important; /* Via le freccette originali */
     }
     
     [data-testid="stSidebarCollapsedControl"]::after {
         content: "☰";
         font-size: 2.5rem;
-        color: #1E90FF;
+        color: #1E90FF; /* Blu Elettrico ben visibile */
         font-weight: bold;
         padding-left: 5px;
-        margin-top: -10px;
+        margin-top: -5px;
         display: block;
     }
 
