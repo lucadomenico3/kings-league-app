@@ -11,7 +11,7 @@ st.set_page_config(
     page_title="Kings Valdagri Cup", 
     layout="wide", 
     page_icon="👑",
-    initial_sidebar_state="collapsed" # <--- ECCO LA MODIFICA FONDAMENTALE (Menu chiuso all'avvio)
+    initial_sidebar_state="collapsed"  # Il menu parte chiuso (così il leone non ruggisce subito)
 )
 
 # -----------------------------------------------------------------------------
@@ -52,7 +52,6 @@ def get_video_html(file_path):
         with open(file_path, "rb") as f:
             video_bytes = f.read()
         video_b64 = base64.b64encode(video_bytes).decode()
-        # Autoplay attivo: partirà appena il menu diventa visibile
         return f'''
         <video width="100%" autoplay playsinline style="border-radius: 10px; pointer-events: none;">
             <source src="data:video/mp4;base64,{video_b64}" type="video/mp4">
@@ -66,7 +65,7 @@ def vai_a(pagina):
     st.session_state.nav_selection = pagina
 
 # -----------------------------------------------------------------------------
-# 4. CSS STILE "CLEAN BLUE" + FIX MENU
+# 4. CSS STILE "CLEAN BLUE" + PULSANTE FIXED
 # -----------------------------------------------------------------------------
 st.markdown("""
 <style>
@@ -79,38 +78,44 @@ st.markdown("""
         font-family: 'Roboto', sans-serif;
     }
 
-    /* HEADER: TRASPARENTE (Per non coprire il menu) */
+    /* HEADER TRASPARENTE */
     header[data-testid="stHeader"] {
         background-color: transparent !important;
         border-bottom: none !important;
-        z-index: 1 !important;
     }
 
-    /* PULIZIA INTERFACCIA */
+    /* NASCONDIAMO ELEMENTI NON NECESSARI */
     [data-testid="stDecoration"] { display: none !important; }
     [data-testid="stToolbar"] { display: none !important; }
     footer { display: none !important; }
     .stDeployButton { display: none !important; }
     [data-testid="stElementToolbar"] { display: none !important; }
 
-    /* MENU HAMBURGER PERSONALIZZATO (☰) */
+    /* --- MENU HAMBURGER (FIXED POSITION) --- */
+    /* Questa è la parte magica: lo fissiamo allo schermo */
+    
     [data-testid="stSidebarCollapsedControl"] {
+        position: fixed !important; /* Lo stacchiamo dal flusso */
+        top: 15px !important;
+        left: 15px !important;
+        z-index: 1000000 !important; /* Sopra a tutto, anche all'header */
         display: block !important;
         visibility: visible !important;
         color: #1E90FF !important;
-        z-index: 999999 !important;
         background-color: transparent !important;
     }
     
-    [data-testid="stSidebarCollapsedControl"] svg { display: none !important; }
+    /* Nascondiamo la freccia originale */
+    [data-testid="stSidebarCollapsedControl"] svg {
+        display: none !important;
+    }
     
+    /* Disegniamo l'Hamburger */
     [data-testid="stSidebarCollapsedControl"]::after {
         content: "☰";
         font-size: 2.8rem;
         color: #1E90FF;
         font-weight: bold;
-        padding-left: 5px;
-        margin-top: -5px;
         display: block;
     }
 
@@ -123,6 +128,17 @@ st.markdown("""
         font-weight: bold !important;
         font-size: 1.1rem !important;
         border-bottom: 1px solid #333 !important;
+    }
+
+    /* ANIMAZIONE LOGO SIDEBAR */
+    [data-testid="stSidebar"] img {
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(30, 144, 255, 0.4);
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); box-shadow: 0 0 15px rgba(30, 144, 255, 0.4); }
+        50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(30, 144, 255, 0.8); }
+        100% { transform: scale(1); box-shadow: 0 0 15px rgba(30, 144, 255, 0.4); }
     }
 
     /* CARD STYLE */
@@ -141,13 +157,12 @@ st.markdown("""
         text-shadow: 0px 0px 10px rgba(30, 144, 255, 0.5);
     }
     
-    /* SIDEBAR */
     [data-testid="stSidebar"] { 
         background-color: #00040a; 
         border-right: 1px solid #1E90FF; 
     }
     
-    /* PULSANTI */
+    /* PULSANTI STILE PRO */
     div.stButton > button {
         background-color: #1E90FF;
         color: white;
@@ -181,25 +196,27 @@ lottie_soccer = load_lottieurl("https://assets9.lottiefiles.com/packages/lf20_6Y
 # 6. SIDEBAR
 # -----------------------------------------------------------------------------
 with st.sidebar:
-    # Mostriamo SEMPRE il video nel menu.
-    # Essendo il menu chiuso all'avvio, il video non si vedrà né sentirà.
-    # Appena clicchi "☰", il menu si apre e il video (che è in autoplay) parte.
-    video_html = get_video_html("ruggito.mp4")
-    
-    if video_html:
-        st.markdown(video_html, unsafe_allow_html=True)
+    # VIDEO LOGIC: Parte solo quando apri il menu per la prima volta
+    if "intro_played" not in st.session_state:
+        st.session_state["intro_played"] = False
+
+    if not st.session_state["intro_played"]:
+        video_html = get_video_html("ruggito.mp4")
+        if video_html:
+            st.markdown(video_html, unsafe_allow_html=True)
+            st.session_state["intro_played"] = True
+        else:
+            st.warning("Video non trovato.")
     else:
-        # Se non trova il video, mostra l'immagine statica come fallback
         try:
             st.image("sfondo.jpeg", use_container_width=True)
+            st.markdown("""<style>[data-testid="stSidebar"] img { animation: pulse 3s infinite; }</style>""", unsafe_allow_html=True)
         except:
-            st.warning("Video/Logo non trovato")
+            st.warning("Logo non trovato")
 
     st.markdown("<h3 style='text-align: center; margin-top: 0;'>KINGS VALDAGRI</h3>", unsafe_allow_html=True)
     st.markdown("---")
     
-    # MENU LATERALE
-    # Usiamo una chiave per sincronizzarlo con i bottoni della Home
     menu = st.radio("NAVIGAZIONE", [
         "🏠 Home & Live", 
         "🏆 Classifica", 
